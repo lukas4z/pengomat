@@ -164,6 +164,13 @@ Phase Ausgelost, nicht eingetragen:
 - Schriftzug „Pengomat" geschmückt (Tannengrün, Christbaumkugeln, Lichter).
 - Dezente Dauer-Animationen: Schnee am Fenster, Lichterkette blinkt,
   Kugeln pendeln, Feuer flackert, Peng wippt leicht.
+- **Stil (vom Auftraggeber gewählt): Sticker-Look.** Flache Farben, kräftige
+  dunkle Konturen, weiche runde Formen, kleine Akzente (Sterne, Funkeln) –
+  wie ein Sticker-Bogen. Die ganze Seite (Stube, Kamin, Socken, Geschenk,
+  Schriftzug) wird in diesem Stil gebaut. Der Builder darf im Detail
+  variieren. Peng: grau mit heller Brust, rote Mütze mit Glöckchen,
+  Wichtel-Outfit; Posen: sitzend-zufrieden (Kopf), genervt liegend (Formular),
+  jubelnd (Bestätigung), kullernd-lachend (Enthüllung).
 - Illustrationen der Szene als handgebaute SVGs; Peng als gelieferte Bilder.
 - Peng-Bildplätze (transparenter Hintergrund, PNG/WebP): `peng-header`
   (Wichtel-Outfit, für den Kopf), `peng-form` (schaut übers Formular),

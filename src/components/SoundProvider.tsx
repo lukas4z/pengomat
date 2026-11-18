@@ -24,7 +24,14 @@ const BASS = ["C3", "C3", "C3", "C3", "G3", "G3", "C3", "C3", "F3", "F3", "C3", 
 const EIGHTH = 0.4;
 
 // Recorded Christmas music (see CREDITS.md). The music box above only plays if these cannot load.
-const TRACKS = ["jingle-bells", "deck-the-halls", "up-on-a-housetop", "angels-we-have-heard", "sugar-plum-fairy"].map((n) => `/audio/${n}.mp3`);
+const SONGS: [file: string, title: string][] = [
+  ["jingle-bells", "Jingle Bells"],
+  ["deck-the-halls", "Deck the Halls"],
+  ["up-on-a-housetop", "Up on a Housetop"],
+  ["angels-we-have-heard", "Angels We Have Heard on High"],
+  ["sugar-plum-fairy", "Tanz der Zuckerfee"],
+];
+const TRACKS = SONGS.map(([n]) => `/audio/${n}.mp3`);
 const MUSIC_VOLUME = 0.32;
 
 type Engine = { ctx: AudioContext; master: GainNode; music: GainNode; noise: AudioBuffer };
@@ -121,6 +128,9 @@ export function SoundProvider({ children }: { children: ReactNode }) {
   const player = useRef<HTMLAudioElement | null>(null);
   const track = useRef(Math.floor(Math.random() * TRACKS.length));
   const useBox = useRef(false);
+  const [current, setCurrent] = useState(track.current);
+  const [menu, setMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const playMusic = useCallback(() => {
     if (mutedRef.current || useBox.current) return;
@@ -130,6 +140,7 @@ export function SoundProvider({ children }: { children: ReactNode }) {
       a.preload = "auto";
       a.addEventListener("ended", () => {
         track.current = (track.current + 1) % TRACKS.length;
+        setCurrent(track.current);
         a.src = TRACKS[track.current];
         a.play().catch(() => {});
       });
@@ -200,6 +211,41 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     };
   }, [start, playMusic]);
 
+  /** Pick a song from the list: plays it right away and turns the sound on if it was off. */
+  const choose = useCallback(
+    (i: number) => {
+      track.current = i;
+      setCurrent(i);
+      setMenu(false);
+      if (mutedRef.current) {
+        mutedRef.current = false;
+        setMuted(false);
+        setFlag(MUTE_FLAG, false);
+      }
+      start();
+      engine.current?.ctx.resume().catch(() => {});
+      const a = player.current;
+      if (a) {
+        a.src = TRACKS[i];
+        a.play().catch(() => {});
+      }
+    },
+    [start],
+  );
+
+  useEffect(() => {
+    if (!menu) return;
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !menuRef.current?.contains(e.target as Node)) setMenu(false);
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [menu]);
+
   const api = useMemo<SoundApi>(
     () => ({
       muted,
@@ -228,13 +274,34 @@ export function SoundProvider({ children }: { children: ReactNode }) {
   return (
     <SoundContext.Provider value={api}>
       {children}
-      <button type="button" className={`sound-toggle${muted ? " sound-toggle--off" : ""}`} aria-pressed={!muted} aria-label={muted ? "Ton einschalten" : "Ton ausschalten"} onClick={api.toggle}>
-        <svg viewBox="0 0 24 24" aria-hidden>
-          <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" />
-          {muted ? <path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none" /> : <path d="M16 8.5c1.6 1.8 1.6 5.2 0 7M18.6 6c3 3.2 3 8.800 0 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none" />}
-        </svg>
-        <span>{muted ? "Ton aus" : "Ton an"}</span>
-      </button>
+      <div className="soundbar" ref={menuRef}>
+        {menu && (
+          <div className="songs" role="menu" aria-label="Lied auswählen">
+            <p className="songs__title">Welches Lied?</p>
+            {SONGS.map(([file, title], i) => (
+              <button key={file} type="button" role="menuitemradio" aria-checked={i === current} className={`songs__item${i === current ? " songs__item--on" : ""}`} onClick={() => choose(i)}>
+                <span className="songs__dot" aria-hidden />
+                {title}
+              </button>
+            ))}
+          </div>
+        )}
+        <button type="button" className="sound-toggle sound-toggle--songs" aria-haspopup="menu" aria-expanded={menu} aria-label="Lied auswählen" onClick={() => setMenu((m) => !m)}>
+          <svg viewBox="0 0 24 24" aria-hidden>
+            <path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="6.5" cy="18" r="2.6" fill="currentColor" />
+            <circle cx="16.5" cy="16" r="2.6" fill="currentColor" />
+          </svg>
+          <span>Lied</span>
+        </button>
+        <button type="button" className={`sound-toggle${muted ? " sound-toggle--off" : ""}`} aria-pressed={!muted} aria-label={muted ? "Ton einschalten" : "Ton ausschalten"} onClick={api.toggle}>
+          <svg viewBox="0 0 24 24" aria-hidden>
+            <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" />
+            {muted ? <path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none" /> : <path d="M16 8.5c1.6 1.8 1.6 5.2 0 7M18.6 6c3 3.2 3 8.8 0 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" fill="none" />}
+          </svg>
+          <span>{muted ? "Ton aus" : "Ton an"}</span>
+        </button>
+      </div>
     </SoundContext.Provider>
   );
 }

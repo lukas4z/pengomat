@@ -130,20 +130,20 @@ const log = (ok, msg) => console.log(`${ok ? "PASS" : "FAIL"}  ${msg}`);
   log(name !== "Mia" && name.length > 1, `three shakes reveal someone else (${name})`);
   await p.click("text=Alles klar!");
   await p.waitForTimeout(700);
-  await p.locator(".people__chip", { hasText: "Ben" }).click();
+  log((await p.locator("text=Ein Geschenk für Ben").count()) === 1, "the second person's present is listed below the first");
+  await p.click("text=Geschenk auspacken");
   await p.waitForSelector(".reveal__gift");
   for (let i = 0; i < 3; i++) { await p.locator(".reveal__gift").tap(); await p.waitForTimeout(700); }
   await p.waitForSelector(".reveal__card .match__name");
   const benMatch = await p.locator(".reveal__card .match__name").innerText();
   log(benMatch !== "Ben" && benMatch !== name, `the second person gets their own present (${benMatch})`);
   await p.click("text=Alles klar!");
-  await p.locator(".people__chip", { hasText: "Mia" }).click();
   await p.waitForTimeout(500);
   await p.reload();
   await p.waitForSelector(".card .match__name");
-  log((await p.locator(".reveal").count()) === 0, "after reload the result shows directly");
-  await p.locator(".card").scrollIntoViewIfNeeded();
-  await p.screenshot({ path: `shots/${stil}-6-ergebnis.png` });
+  log((await p.locator(".reveal").count()) === 0 && (await p.locator(".card .match__name").count()) === 2, "after reload both results show directly, one below the other");
+  await p.locator(".card").first().scrollIntoViewIfNeeded();
+  await p.screenshot({ path: `shots/${stil}-6-ergebnis.png`, fullPage: true });
 
   const desk = await b.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
   const d = await desk.newPage();

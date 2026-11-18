@@ -133,11 +133,15 @@ export function ParticipantApp({ sync = 0 }: { sync?: number }) {
   );
 
   if (pub.phase === "drawn") {
-    if (current?.me.match) {
+    const drawn = people.filter((p) => p.me.match);
+    if (drawn.length) {
+      // everyone on this device, one below the other, each with their own present
       return (
         <>
-          {switcher}
-          <Reveal key={current.me.id} me={current.me} />
+          {drawn.length > 1 && <p className="people__label people__label--solo">Auf diesem Gerät sind {drawn.length} Wichtel – jede Person beschenkt jemand eigenen:</p>}
+          {drawn.map((p, i) => (
+            <Reveal key={p.me.id} me={p.me} owner={drawn.length > 1 ? p.me.name : undefined} autoOpen={i === 0} />
+          ))}
         </>
       );
     }

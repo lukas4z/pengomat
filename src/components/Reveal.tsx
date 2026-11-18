@@ -13,11 +13,11 @@ const MOTION_THRESHOLD = 18; // m/s² change between two samples
 
 type MotionCtor = typeof DeviceMotionEvent & { requestPermission?: () => Promise<"granted" | "denied"> };
 
-function Match({ me }: { me: Me }) {
+function Match({ me, owner }: { me: Me; owner?: string }) {
   const match = me.match!;
   return (
     <>
-      <p className="match__pre">Du beschenkst</p>
+      <p className="match__pre">{owner ? `${owner} beschenkt` : "Du beschenkst"}</p>
       <p className="match__name">{match.name}</p>
       <div className="wishes">
         <h3>{match.wishes.length > 1 ? "Das wünscht sich " : "Das wünscht sich "}{match.name}</h3>
@@ -29,7 +29,7 @@ function Match({ me }: { me: Me }) {
 }
 
 /** After the draw: a present to shake three times, then the result. */
-export function Reveal({ me }: { me: Me }) {
+export function Reveal({ me, owner, autoOpen = true }: { me: Me; owner?: string; autoOpen?: boolean }) {
   const { play } = useSound();
   const flag = `pengomat-revealed-${me.id}`;
   const [seen, setSeen] = useState<boolean | null>(null);
@@ -46,8 +46,8 @@ export function Reveal({ me }: { me: Me }) {
   useEffect(() => {
     const s = getFlag(flag);
     setSeen(s);
-    setOpen(!s);
-  }, [flag]);
+    setOpen(!s && autoOpen);
+  }, [flag, autoOpen]);
 
   const shake = useCallback(() => {
     const now = Date.now();
@@ -122,13 +122,13 @@ export function Reveal({ me }: { me: Me }) {
     <>
       {seen ? (
         <Card pose="reveal" className="card--in card--center">
-          <Match me={me} />
+          <Match me={me} owner={owner} />
           <button type="button" className="link" onClick={restart}>Nochmal auspacken</button>
         </Card>
       ) : (
         <Card pose="look" className="card--in card--center">
-          <h2>Peng hat ausgelost!</h2>
-          <p className="card__lead">Dein Geschenk wartet auf dich, {me.name}.</p>
+          <h2>{owner ? `Ein Geschenk für ${owner}` : "Peng hat ausgelost!"}</h2>
+          <p className="card__lead">{owner ? `Pack aus, wen ${owner} beschenkt.` : `Dein Geschenk wartet auf dich, ${me.name}.`}</p>
           <button type="button" className="btn btn--wide" onClick={() => setOpen(true)}>Geschenk auspacken</button>
         </Card>
       )}
@@ -137,6 +137,7 @@ export function Reveal({ me }: { me: Me }) {
         <div className="reveal" role="dialog" aria-modal="true" aria-label="Dein Wichtel-Geschenk">
           {!unwrapped ? (
             <div className="reveal__stage">
+              {owner && <p className="reveal__owner">Geschenk für {owner}</p>}
               <h2 className="reveal__title">{shakes === 0 ? "Schüttel mich!" : shakes < NEEDED ? "Nochmal!" : "Oh!"}</h2>
               <button
                 type="button"
@@ -184,7 +185,7 @@ export function Reveal({ me }: { me: Me }) {
               <Sparkles />
               <Peng pose="reveal" className="reveal__peng" />
               <div className="reveal__card">
-                <Match me={me} />
+                <Match me={me} owner={owner} />
                 <button type="button" className="btn btn--wide" onClick={close}>Alles klar!</button>
               </div>
             </div>

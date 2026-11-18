@@ -632,3 +632,5 @@ html[data-theme="film"] .people__chip { border: 3px solid #8a5636; box-shadow: 0
 .link--center { display: block; margin-left: auto; margin-right: auto; }
 .field__hint--center { text-align: center; }
 @media (min-width: 980px) { .layout__side .people { margin-top: 40px; } .layout__side .people + .card { margin-top: 150px; } }
+.people__label--solo { margin-top: 24px; position: relative; z-index: 4; }
+.reveal__owner { margin-bottom: 6px; font-weight: 800; font-size: 20px; color: var(--gold); }

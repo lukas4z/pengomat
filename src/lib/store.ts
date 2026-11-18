@@ -30,6 +30,8 @@ redis.call('SET', KEYS[1], ARGV[2])
 redis.call('SET', KEYS[2], ARGV[3])
 return 1`;
 
+const READ = `return redis.call('GET', KEYS[1])`;
+
 /** Whole state as one JSON string in Upstash Redis; writes are compare-and-set on a version key. */
 export class RedisStore implements Store {
   private redis: import("@upstash/redis").Redis | undefined;
@@ -42,8 +44,10 @@ export class RedisStore implements Store {
     return this.redis;
   }
   async read(): Promise<State> {
-    const raw = await (await this.client()).get<string>(STATE_KEY);
-    return raw ? (JSON.parse(raw) as State) : emptyState();
+    // Read through a script: scripts run on the primary database, so a read right after a write
+    // never returns an older copy from a read replica.
+    const raw = await (await this.client()).eval(READ, [STATE_KEY], []);
+    return typeof raw === "string" && raw ? (JSON.parse(raw) as State) : emptyState();
   }
   async write(next: State, expectedVersion: number): Promise<boolean> {
     const ok = await (await this.client()).eval(CAS, [STATE_KEY, VERSION_KEY], [String(expectedVersion), JSON.stringify(next), String(next.version)]);

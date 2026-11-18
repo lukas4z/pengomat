@@ -9,12 +9,14 @@ const newToken = () => randomBytes(32).toString("base64url");
 const fold = (name: string) => name.toLocaleLowerCase("de-DE");
 
 async function mutate<T>(store: Store, fn: (state: State) => T): Promise<T> {
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < 8; attempt++) {
     const state = await store.read();
     const expected = state.version;
     const result = fn(state);
     state.version = expected + 1;
     if (await store.write(state, expected)) return result;
+    // someone else wrote in between: wait a moment (a little longer each time) and try again
+    await new Promise((r) => setTimeout(r, 15 + attempt * 25 + Math.random() * 30));
   }
   throw new Error("Speichern fehlgeschlagen – bitte nochmal versuchen");
 }

@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pengomat
 
-## Getting Started
+Wichtel-o-mat mit Kater Peng. Zwei Links:
 
-First, run the development server:
+- **Für alle:** `https://<deine-seite>/`
+- **Für die Gastgeberin:** `https://<deine-seite>/host/<HOST_KEY>`
+
+## Lokal starten
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+HOST_KEY=test npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Ohne Datenbank merkt sich die Seite alles nur, solange der Server läuft. Host-Seite lokal: `http://localhost:3000/host/test`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Auf Vercel bringen
 
-## Learn More
+1. Projekt bei Vercel importieren (Framework: Next.js, keine weiteren Einstellungen).
+2. Im Projekt unter **Storage** eine **Upstash Redis**-Datenbank aus dem Marketplace anlegen und mit dem Projekt verbinden. Die Zugangsdaten landen automatisch als Umgebungsvariablen im Projekt.
+3. Unter **Settings → Environment Variables** `HOST_KEY` setzen (lang und zufällig – wer ihn kennt, ist Gastgeber) und optional `NEXT_PUBLIC_STIL` (`film` oder `sticker`).
+4. Neu deployen.
+5. **Einmal Probelauf machen:** auf der Host-Seite eintragen, zwei weitere Testnamen von anderen Geräten, auslosen, Geschenk schütteln. Danach unten auf der Host-Seite „Alles zurücksetzen".
 
-To learn more about Next.js, take a look at the following resources:
+Die Anbindung an Upstash ist gegen keine echte Datenbank getestet worden – der Probelauf in Schritt 5 ist deshalb Pflicht.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Wie es abläuft
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Jede Person trägt Name und 1–3 Wünsche ein. Wünsche sieht nur, wer die Person zieht.
+- Das Gerät merkt sich, wer man ist. Zusätzlich gibt es einen persönlichen Link für andere Geräte.
+- Die Gastgeberin sieht am Kamin eine Socke pro Person (Name, Zeitpunkt, Anzahl Wünsche), legt das Budget fest und lost aus. Paarungen sieht auch sie nicht.
+- Link verloren? Socke antippen → „Neuen persönlichen Link erzeugen" und weiterschicken.
+- Nach der Auslosung erscheint beim Öffnen ein Geschenk: dreimal schütteln (Handy oder antippen).
 
-## Deploy on Vercel
+## Bilder tauschen
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Peng: `public/peng/<film|sticker>/peng-<pose>.webp` (oder `.png`). Posen: `header`, `look`, `sleep`, `form`, `done`, `reveal`, `gift`, `nap`. Fehlt eine Pose, springt eine andere ein.
+- Deko im Film-Look: `public/film/*.webp`.
+- Neu aus den Original-Bögen erzeugen: siehe `scripts/` (`cut_film.py`, `upscale.py`, `build_film_assets.py`).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Prüfen
+
+```bash
+npm test
+```
+
+```bash
+npm run build && HOST_KEY=test-key npx next start -p 3111
+```
+
+```bash
+node scripts/flow.cjs http://localhost:3111 film && node scripts/host.cjs http://localhost:3111 film
+```

@@ -54,9 +54,9 @@ for cell in cells:
     solid = largest(~flood_outside(colored))  # the figure incl. interior light areas
     # edge band: pixels of the figure close to the outside get alpha from their whiteness
     m = Image.fromarray((solid * 255).astype("uint8"))
-    inner = np.asarray(m.filter(ImageFilter.MinFilter(4 * scale + 1))) > 0
+    inner = np.asarray(m.filter(ImageFilter.MinFilter(13))) > 0
     alpha = np.where(inner, 1.0, np.clip((white - 10) / 70.0, 0, 1)) * solid
-    alpha = np.asarray(Image.fromarray((alpha * 255).astype("uint8")).filter(ImageFilter.GaussianBlur(0.6 * scale))).astype(float) / 255
+    alpha = np.asarray(Image.fromarray((alpha * 255).astype("uint8")).filter(ImageFilter.MinFilter(7)).filter(ImageFilter.GaussianBlur(1.2))).astype(float) / 255
     # remove the white the fuzzy edge was blended with
     al = np.clip(alpha, 0.02, 1)[..., None]
     rgb = np.clip((a - 255.0 * (1 - al)) / al, 0, 255)

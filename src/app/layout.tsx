@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Nunito } from "next/font/google";
+import { SoundProvider } from "@/components/SoundProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
@@ -15,9 +16,11 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="de" data-theme="sticker" className={`${display.variable} ${text.variable}`}>
+    <html lang="de" data-theme={process.env.NEXT_PUBLIC_STIL === "sticker" ? "sticker" : "film"} className={`${display.variable} ${text.variable}`}>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <SoundProvider>{children}</SoundProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

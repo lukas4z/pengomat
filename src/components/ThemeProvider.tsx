@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { THEMES, type Theme } from "@/lib/skin";
 
-const DEFAULT: Theme = process.env.NEXT_PUBLIC_STIL === "film" ? "film" : "sticker";
+const DEFAULT: Theme = process.env.NEXT_PUBLIC_STIL === "sticker" ? "sticker" : "film";
 const Ctx = createContext<{ theme: Theme; setTheme: (t: Theme) => void }>({ theme: DEFAULT, setTheme: () => {} });
 
 export function useTheme() {

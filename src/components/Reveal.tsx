@@ -9,7 +9,7 @@ import { useSound } from "./SoundProvider";
 
 const NEEDED = 3;
 const COOLDOWN_MS = 600;
-const MOTION_THRESHOLD = 18; // m/s² change between two samples
+const SHAKE_FORCE = 11; // m/s² beyond gravity; a firm shake reaches 15–30, carrying the phone stays under 5
 
 type MotionCtor = typeof DeviceMotionEvent & { requestPermission?: () => Promise<"granted" | "denied"> };
 
@@ -40,8 +40,9 @@ export function Reveal({ me, owner, autoOpen = true }: { me: Me; owner?: string;
   const last = useRef(0);
   const count = useRef(0);
   const drag = useRef<{ x: number; dir: number; turns: number } | null>(null);
-  const prev = useRef<{ x: number; y: number; z: number } | null>(null);
   const listening = useRef(false);
+  // iPhones only deliver motion after the person allowed it with a tap
+  const [needsMotionOk, setNeedsMotionOk] = useState(false);
 
   useEffect(() => {
     const s = getFlag(flag);
@@ -71,11 +72,13 @@ export function Reveal({ me, owner, autoOpen = true }: { me: Me; owner?: string;
 
   const onMotion = useCallback(
     (e: DeviceMotionEvent) => {
-      const a = e.accelerationIncludingGravity;
-      if (!a || a.x === null || a.y === null || a.z === null) return;
-      const p = prev.current;
-      prev.current = { x: a.x, y: a.y, z: a.z };
-      if (p && Math.hypot(a.x - p.x, a.y - p.y, a.z - p.z) > MOTION_THRESHOLD) shake();
+      // prefer the sensor value without gravity; otherwise subtract gravity from the total
+      const a = e.acceleration;
+      const g = e.accelerationIncludingGravity;
+      let force = 0;
+      if (a && a.x !== null && a.y !== null && a.z !== null) force = Math.hypot(a.x, a.y, a.z);
+      else if (g && g.x !== null && g.y !== null && g.z !== null) force = Math.abs(Math.hypot(g.x, g.y, g.z) - 9.81);
+      if (force > SHAKE_FORCE) shake();
     },
     [shake],
   );
@@ -86,10 +89,15 @@ export function Reveal({ me, owner, autoOpen = true }: { me: Me; owner?: string;
     window.addEventListener("devicemotion", onMotion);
   }, [onMotion]);
 
-  // browsers without a permission prompt can listen right away
+  // Always listen: where no permission is needed (most Android phones) shaking works right away.
+  // iPhones stay silent until the person allows motion with a tap, so ask and show a button if that is still open.
   useEffect(() => {
     if (!open || typeof DeviceMotionEvent === "undefined") return;
-    if (typeof (DeviceMotionEvent as MotionCtor).requestPermission !== "function") listen();
+    listen();
+    const ctor = DeviceMotionEvent as MotionCtor;
+    if (typeof ctor.requestPermission === "function") {
+      ctor.requestPermission().then((r) => setNeedsMotionOk(r !== "granted"), () => setNeedsMotionOk(true));
+    }
     return () => {
       window.removeEventListener("devicemotion", onMotion);
       listening.current = false;
@@ -98,8 +106,16 @@ export function Reveal({ me, owner, autoOpen = true }: { me: Me; owner?: string;
 
   function askMotion() {
     const ctor = typeof DeviceMotionEvent !== "undefined" ? (DeviceMotionEvent as MotionCtor) : null;
-    if (ctor && typeof ctor.requestPermission === "function" && !listening.current) {
-      ctor.requestPermission().then((r) => r === "granted" && listen()).catch(() => {});
+    if (ctor && typeof ctor.requestPermission === "function") {
+      ctor
+        .requestPermission()
+        .then((r) => {
+          if (r === "granted") {
+            listen();
+            setNeedsMotionOk(false);
+          }
+        })
+        .catch(() => {});
     }
   }
 
@@ -179,6 +195,9 @@ export function Reveal({ me, owner, autoOpen = true }: { me: Me; owner?: string;
                 ))}
               </div>
               <p className="reveal__hint">Handy schütteln oder aufs Geschenk tippen – drei Mal.</p>
+              {needsMotionOk && (
+                <button type="button" className="btn btn--quiet btn--small reveal__motion" onClick={askMotion}>Handy-Schütteln erlauben</button>
+              )}
             </div>
           ) : (
             <div className="reveal__result">

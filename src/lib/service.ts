@@ -43,10 +43,18 @@ function toMe(state: State, p: Participant): Me {
   return me;
 }
 
+function groupTooBig(state: State): boolean {
+  const sizes = new Map<string, number>();
+  for (const p of state.participants) if (p.group) sizes.set(p.group, (sizes.get(p.group) ?? 0) + 1);
+  return Math.max(0, ...sizes.values()) > Math.floor(state.participants.length / 2);
+}
+
 function toHostView(state: State): HostView {
   return {
     phase: state.phase,
     budget: state.budget,
+    groupTooBig: state.phase === "signup" && groupTooBig(state),
+    ...(state.phase === "drawn" ? { sameGroupGifts: state.sameGroupGifts ?? 0 } : {}),
     ...(state.drawnAt ? { drawnAt: state.drawnAt } : {}),
     participants: state.participants.map((p) => ({ id: p.id, name: p.name, joinedAt: p.joinedAt, wishCount: p.wishes.length })),
   };
@@ -61,7 +69,7 @@ export async function publicState(store: Store): Promise<PublicState> {
   return { phase: state.phase, budget: state.budget, eventDate: EVENT_DATE };
 }
 
-export async function join(store: Store, input: { name: unknown; wishes: unknown }): Promise<{ token: string; me: Me }> {
+export async function join(store: Store, input: { name: unknown; wishes: unknown; withToken?: unknown }): Promise<{ token: string; me: Me }> {
   const name = parseName(input.name);
   const wishes = parseWishes(input.wishes);
   const token = newToken();
@@ -70,6 +78,10 @@ export async function join(store: Store, input: { name: unknown; wishes: unknown
     if (state.participants.some((p) => fold(p.name) === fold(name))) throw new ServiceError("name_taken");
     if (state.participants.length >= LIMITS.participantsMax) throw new ServiceError("full");
     const p: Participant = { id: randomUUID(), name, wishes, joinedAt: new Date().toISOString(), tokenHash: hash(token) };
+    // entered from a phone that already holds someone: both belong to the same group
+    const h = typeof input.withToken === "string" && input.withToken ? hash(input.withToken) : "";
+    const mate = h ? state.participants.find((x) => x.tokenHash === h) : undefined;
+    if (mate) p.group = mate.group ??= mate.id;
     state.participants.push(p);
     return { token, me: toMe(state, p) };
   });
@@ -124,8 +136,10 @@ export async function draw(store: Store): Promise<HostView> {
   return mutate(store, (state) => {
     if (state.phase === "drawn") throw new ServiceError("already_drawn");
     if (state.participants.length < LIMITS.drawMin) throw new ServiceError("too_few");
-    const chain = drawChain(state.participants.map((p) => p.id));
+    const groups = Object.fromEntries(state.participants.map((p) => [p.id, p.group]));
+    const chain = drawChain(state.participants.map((p) => p.id), undefined, groups);
     for (const p of state.participants) p.givesTo = chain[p.id];
+    state.sameGroupGifts = state.participants.filter((p) => p.group && p.group === groups[chain[p.id]]).length;
     state.phase = "drawn";
     state.drawnAt = new Date().toISOString();
     return toHostView(state);
@@ -137,6 +151,15 @@ export async function reset(store: Store): Promise<HostView> {
     state.participants = [];
     state.phase = "signup";
     delete state.drawnAt;
+    delete state.sameGroupGifts;
     return toHostView(state);
   });
+}
+
+/** Who gives to whom, by name. Empty before the draw. Only the host may ask for this. */
+export async function pairs(store: Store): Promise<{ giver: string; receiver: string }[]> {
+  const state = await store.read();
+  if (state.phase !== "drawn") return [];
+  const nameOf = new Map(state.participants.map((p) => [p.id, p.name]));
+  return state.participants.filter((p) => p.givesTo).map((p) => ({ giver: p.name, receiver: nameOf.get(p.givesTo!) ?? "?" }));
 }

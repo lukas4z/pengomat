@@ -123,7 +123,7 @@ export function ParticipantApp({ sync = 0 }: { sync?: number }) {
   };
   const switcher = people.length > 1 && (
     <div className="people" role="group" aria-label="Wer ist gerade dran?">
-      <span className="people__label">Auf diesem Gerät:</span>
+      <span className="people__label">{pub.phase === "drawn" ? "Wessen Geschenk möchtest du sehen?" : "Auf diesem Gerät:"}</span>
       {people.map((p) => (
         <button key={p.token} type="button" className="people__chip" aria-pressed={!adding && p.token === current?.token} onClick={() => choose(p.token)}>
           {p.me.name}
@@ -133,15 +133,12 @@ export function ParticipantApp({ sync = 0 }: { sync?: number }) {
   );
 
   if (pub.phase === "drawn") {
-    const drawn = people.filter((p) => p.me.match);
-    if (drawn.length) {
-      // everyone on this device, one below the other, each with their own present
+    if (current?.me.match) {
+      // one person at a time; the name buttons on top switch between everyone on this device
       return (
         <>
-          {drawn.length > 1 && <p className="people__label people__label--solo">Auf diesem Gerät sind {drawn.length} Wichtel – jede Person beschenkt jemand eigenen:</p>}
-          {drawn.map((p, i) => (
-            <Reveal key={p.me.id} me={p.me} owner={drawn.length > 1 ? p.me.name : undefined} autoOpen={i === 0} />
-          ))}
+          {switcher}
+          <Reveal key={current.me.id} me={current.me} owner={people.length > 1 ? current.me.name : undefined} />
         </>
       );
     }
@@ -181,6 +178,7 @@ export function ParticipantApp({ sync = 0 }: { sync?: number }) {
         notice={notice}
         leaving={leaving}
         another={people.length > 0}
+        withToken={current?.token}
         onCancel={() => setAdding(false)}
         onJoined={(me, token) => {
           setToken(token);

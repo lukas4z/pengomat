@@ -77,6 +77,14 @@ const join = (name, wish) => fetch(`${base}/api/join`, { method: "POST", headers
 
   errors.length = 0; // after a reset the host is signed out too, the browser logs that 401
   const before = errors.length;
+  await p.locator(".hostpanel").scrollIntoViewIfNeeded();
+  log((await p.locator(".pairs").count()) === 0, "pairings are not shown unless asked for");
+  await p.click("text=Wer beschenkt wen? (nur bei Problemen)");
+  await p.click("text=Trotzdem anzeigen");
+  await p.waitForSelector(".pairs li");
+  log((await p.locator(".pairs li").count()) === 3, "the host can open the overview of who gives to whom");
+  await p.screenshot({ path: `shots/${stil}-host-paare.png` });
+  await p.click("dialog >> text=Schließen");
   await p.locator(".host__reset").click();
   await p.fill("#reset-word", "PENG");
   await p.click("dialog button:text-is(\"Zurücksetzen\")");

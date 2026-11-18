@@ -114,3 +114,9 @@ test("full flow: join, host sees counts only, draw, everyone gets a match", asyn
   expect((await getMe(req("GET", undefined, { "x-peng-token": people[0].token }))).status).toBe(401);
   expect((await getMe(req("GET", undefined, { "x-peng-token": link.token }))).status).toBe(200);
 });
+
+test("the pairing overview needs the host key", async () => {
+  const { GET: getPairs } = await import("@/app/api/host/pairs/route");
+  expect((await getPairs(req("GET"))).status).toBe(404);
+  expect((await getPairs(req("GET", undefined, host))).status).toBe(200);
+});

@@ -6,12 +6,15 @@ export interface Participant {
   joinedAt: string;
   tokenHash: string;
   givesTo?: string;
+  /** shared by people entered on the same phone; they do not draw each other */
+  group?: string;
 }
 export interface State {
   version: number;
   phase: Phase;
   budget: string;
   drawnAt?: string;
+  sameGroupGifts?: number;
   participants: Participant[];
 }
 export interface PublicState { phase: Phase; budget: string; eventDate: string }
@@ -24,7 +27,16 @@ export interface Me {
   match?: { name: string; wishes: string[] };
 }
 export interface HostParticipant { id: string; name: string; joinedAt: string; wishCount: number }
-export interface HostView { phase: Phase; budget: string; drawnAt?: string; participants: HostParticipant[] }
+export interface HostView {
+  phase: Phase;
+  budget: string;
+  drawnAt?: string;
+  /** before the draw: one phone holds more than half of everyone, so some of them must draw each other */
+  groupTooBig: boolean;
+  /** after the draw: how many people had to draw someone from their own phone */
+  sameGroupGifts?: number;
+  participants: HostParticipant[];
+}
 export type ErrorCode = "invalid" | "name_taken" | "closed" | "full" | "unauthorized" | "not_found" | "too_few" | "already_drawn" | "no_database";
 export class ServiceError extends Error {
   constructor(public code: ErrorCode) {

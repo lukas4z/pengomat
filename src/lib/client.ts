@@ -95,7 +95,7 @@ async function call<T>(path: string, opts: { method?: string; body?: unknown; to
 
 export const api = {
   state: () => call<PublicState>("/api/state"),
-  join: (name: string, wishes: string[]) => call<{ token: string; me: Me }>("/api/join", { method: "POST", body: { name, wishes } }),
+  join: (name: string, wishes: string[], withToken?: string) => call<{ token: string; me: Me }>("/api/join", { method: "POST", body: { name, wishes, ...(withToken ? { withToken } : {}) } }),
   me: (token: string) => call<Me>("/api/me", { token }),
   updateWishes: (token: string, wishes: string[]) => call<Me>("/api/me", { method: "PATCH", token, body: { wishes } }),
 };
@@ -106,6 +106,7 @@ export const hostApi = (hostKey: string) => ({
   remove: (id: string) => call<HostView>(`/api/host/participants/${encodeURIComponent(id)}`, { method: "DELETE", hostKey }),
   reissue: (id: string) => call<{ token: string }>(`/api/host/participants/${encodeURIComponent(id)}/link`, { method: "POST", hostKey }),
   draw: () => call<HostView>("/api/host/draw", { method: "POST", hostKey }),
+  pairs: () => call<{ giver: string; receiver: string }[]>("/api/host/pairs", { hostKey }),
   reset: () => call<HostView>("/api/host/reset", { method: "POST", hostKey, body: { confirm: "PENG" } }),
 });
 

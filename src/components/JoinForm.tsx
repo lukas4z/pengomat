@@ -6,7 +6,7 @@ import { Card } from "./Card";
 import { useSound } from "./SoundProvider";
 import { checkWishes, WishFields } from "./WishFields";
 
-export function JoinForm({ budget, notice, leaving, another = false, onCancel, onJoined }: { budget: string; notice?: string | null; leaving: boolean; another?: boolean; onCancel?: () => void; onJoined: (me: Me, token: string) => void }) {
+export function JoinForm({ budget, notice, leaving, another = false, withToken, onCancel, onJoined }: { budget: string; withToken?: string; notice?: string | null; leaving: boolean; another?: boolean; onCancel?: () => void; onJoined: (me: Me, token: string) => void }) {
   const { play } = useSound();
   const [name, setName] = useState("");
   const [wishes, setWishes] = useState([""]);
@@ -24,7 +24,7 @@ export function JoinForm({ budget, notice, leaving, another = false, onCancel, o
     if (next.name || next.wishes) return;
     setBusy(true);
     try {
-      const { token, me } = await api.join(n, wishes);
+      const { token, me } = await api.join(n, wishes, another ? withToken : undefined);
       play("bell");
       onJoined(me, token);
     } catch (err) {
@@ -38,7 +38,7 @@ export function JoinForm({ budget, notice, leaving, another = false, onCancel, o
   return (
     <Card pose="sleep" mood="sleep" budget={budget} className={leaving ? "card--leaving" : "card--in"}>
       <h2>{another ? "Noch ein Wunschzettel" : "Dein Wunschzettel"}</h2>
-      {another && <p className="card__lead">Für wen trägst du noch ein? Zum Beispiel für ein Kind ohne eigenes Handy.</p>}
+      {another && <p className="card__lead">Für wen trägst du noch ein? Zum Beispiel für ein Kind ohne eigenes Handy. Wer über dasselbe Handy eingetragen ist, zieht sich nicht gegenseitig.</p>}
       {notice && <p className="notice" role="status">{notice}</p>}
       <form onSubmit={submit} noValidate>
         <div className="field">

@@ -130,18 +130,25 @@ const log = (ok, msg) => console.log(`${ok ? "PASS" : "FAIL"}  ${msg}`);
   log(name !== "Mia" && name.length > 1, `three shakes reveal someone else (${name})`);
   await p.click("text=Alles klar!");
   await p.waitForTimeout(700);
-  log((await p.locator("text=Ein Geschenk für Ben").count()) === 1, "the second person's present is listed below the first");
-  await p.click("text=Geschenk auspacken");
+  await p.locator(".people__chip", { hasText: "Ben" }).click();
   await p.waitForSelector(".reveal__gift");
-  for (let i = 0; i < 3; i++) { await p.locator(".reveal__gift").tap(); await p.waitForTimeout(700); }
+  // shaking the phone: three firm jolts reported by the motion sensor
+  for (let i = 0; i < 3; i++) {
+    await p.evaluate(() => { const e = new Event("devicemotion"); Object.assign(e, { acceleration: { x: 14, y: 6, z: 3 }, accelerationIncludingGravity: { x: 14, y: 15, z: 3 } }); window.dispatchEvent(e); });
+    await p.waitForTimeout(700);
+  }
+  const shaken = await p.waitForSelector(".reveal__card .match__name", { timeout: 4000 }).then(() => true, () => false);
+  log(shaken, "shaking the phone three times opens the present");
   await p.waitForSelector(".reveal__card .match__name");
   const benMatch = await p.locator(".reveal__card .match__name").innerText();
-  log(benMatch !== "Ben" && benMatch !== name, `the second person gets their own present (${benMatch})`);
+  log(benMatch !== "Ben" && benMatch !== "Mia" && benMatch !== name, `the second person gets their own present, not from the same phone (${benMatch})`);
   await p.click("text=Alles klar!");
+  await p.locator(".people__chip", { hasText: "Mia" }).click();
   await p.waitForTimeout(500);
   await p.reload();
   await p.waitForSelector(".card .match__name");
-  log((await p.locator(".reveal").count()) === 0 && (await p.locator(".card .match__name").count()) === 2, "after reload both results show directly, one below the other");
+  const openOverlays = await p.locator(".reveal").count(), chips = await p.locator(".people__chip").allInnerTexts();
+  log(openOverlays === 0 && chips.includes("Mia") && chips.includes("Ben"), `after reload the result shows directly, with name buttons to switch (overlays ${openOverlays}, buttons ${chips.join("/")})`);
   await p.locator(".card").first().scrollIntoViewIfNeeded();
   await p.screenshot({ path: `shots/${stil}-6-ergebnis.png`, fullPage: true });
 

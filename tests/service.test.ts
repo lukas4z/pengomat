@@ -166,3 +166,61 @@ describe("draw", () => {
     expect(await code(svc.getMe(s, people[0].token))).toBe("unauthorized");
   });
 });
+
+describe("several people from one phone", () => {
+  test("someone added with an existing person's token joins their group and they never draw each other", async () => {
+    for (let run = 0; run < 30; run++) {
+      s = new MemoryStore();
+      const mum = await svc.join(s, { name: "Mama", wishes: ["a"] });
+      const kid = await svc.join(s, { name: "Kind", wishes: ["b"], withToken: mum.token });
+      await svc.join(s, { name: "Oma", wishes: ["c"] });
+      await svc.join(s, { name: "Opa", wishes: ["d"] });
+      const view = await svc.draw(s);
+      expect(view.sameGroupGifts).toBe(0);
+      expect((await svc.getMe(s, mum.token)).match!.name).not.toBe("Kind");
+      expect((await svc.getMe(s, kid.token)).match!.name).not.toBe("Mama");
+    }
+  });
+
+  test("an unknown withToken is ignored", async () => {
+    const r = await svc.join(s, { name: "Mia", wishes: ["a"], withToken: "gibt-es-nicht" });
+    expect(r.me.name).toBe("Mia");
+  });
+
+  test("the host is told before the draw when one phone holds more than half of everyone", async () => {
+    const a = await svc.join(s, { name: "A1", wishes: ["a"] });
+    await svc.join(s, { name: "A2", wishes: ["a"], withToken: a.token });
+    await svc.join(s, { name: "A3", wishes: ["a"], withToken: a.token });
+    await svc.join(s, { name: "Xaver", wishes: ["a"] });
+    expect((await svc.hostView(s)).groupTooBig).toBe(true);
+    const view = await svc.draw(s);
+    expect(view.sameGroupGifts).toBe(2);
+    expect(JSON.stringify(view)).not.toContain("group\"");
+  });
+
+  test("a normal round reports no problem", async () => {
+    await joinN(4);
+    expect((await svc.hostView(s)).groupTooBig).toBe(false);
+  });
+});
+
+describe("host overview of who gives to whom", () => {
+  test("is empty before the draw", async () => {
+    await joinN(3);
+    expect(await svc.pairs(s)).toEqual([]);
+  });
+
+  test("lists every giver once with their receiver, without wishes or tokens", async () => {
+    const people = await joinN(4);
+    await svc.draw(s);
+    const list = await svc.pairs(s);
+    expect(list.map((p) => p.giver).sort()).toEqual(["Person 0", "Person 1", "Person 2", "Person 3"]);
+    expect(list.map((p) => p.receiver).sort()).toEqual(["Person 0", "Person 1", "Person 2", "Person 3"]);
+    for (const p of list) expect(p.giver).not.toBe(p.receiver);
+    const mine = await svc.getMe(s, people[0].token);
+    expect(list.find((p) => p.giver === "Person 0")!.receiver).toBe(mine.match!.name);
+    const json = JSON.stringify(list);
+    expect(json).not.toContain("Geheimwunsch");
+    for (const p of people) expect(json).not.toContain(p.token);
+  });
+});

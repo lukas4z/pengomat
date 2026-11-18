@@ -14,7 +14,7 @@ import { ThemeSwitch } from "./ThemeProvider";
 const POLL_MS = 5000;
 const when = (iso: string) => `${new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "long" }).format(new Date(iso))} um ${new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit" }).format(new Date(iso))} Uhr`;
 
-type Dialog = { kind: "sock"; id: string } | { kind: "draw" } | { kind: "reset" } | null;
+type Dialog = { kind: "sock"; id: string } | { kind: "draw" } | { kind: "reset" } | { kind: "pairs" } | null;
 
 export function HostApp({ hostKey }: { hostKey: string }) {
   const api = useRef(hostApi(hostKey)).current;
@@ -30,6 +30,7 @@ export function HostApp({ hostKey }: { hostKey: string }) {
   const [newLink, setNewLink] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [resetWord, setResetWord] = useState("");
+  const [pairList, setPairList] = useState<{ giver: string; receiver: string }[] | null>(null);
   const known = useRef<Set<string> | null>(null);
   const budgetDirty = useRef(false);
 
@@ -80,6 +81,7 @@ export function HostApp({ hostKey }: { hostKey: string }) {
     setNewLink(null);
     setConfirmRemove(false);
     setResetWord("");
+    setPairList(null);
   };
 
   const people = view?.participants ?? [];
@@ -142,7 +144,10 @@ export function HostApp({ hostKey }: { hostKey: string }) {
 
           <h3>Auslosung</h3>
           {drawn ? (
-            <p className="hostpanel__fixed">Ausgelost am {view?.drawnAt ? when(view.drawnAt) : "–"}. Alle finden ihr Geschenk, wenn sie die Seite öffnen.</p>
+            <>
+            <p className="hostpanel__fixed">Ausgelost am {view?.drawnAt ? when(view.drawnAt) : "–"}. Alle finden ihr Geschenk, wenn sie die Seite öffnen.{view?.sameGroupGifts ? ` ${view.sameGroupGifts} Wichtel mussten jemanden vom selben Handy ziehen, weil es nicht anders aufging.` : ""}</p>
+            <button type="button" className="link" onClick={() => setDialog({ kind: "pairs" })}>Wer beschenkt wen? (nur bei Problemen)</button>
+            </>
           ) : (
             <>
               <p className="hostpanel__text">Wenn alle ihre Socke aufgehängt haben, lost Peng aus. Niemand zieht sich selbst – und auch du siehst nicht, wer wen hat.</p>
@@ -150,6 +155,7 @@ export function HostApp({ hostKey }: { hostKey: string }) {
                 Jetzt auslosen
               </button>
               {n < LIMITS.drawMin && <p className="hostpanel__note">Mindestens 3 Wichtel nötig.</p>}
+              {view?.groupTooBig && <p className="hostpanel__note">Hinweis: Über ein Handy sind mehr als die Hälfte aller Wichtel eingetragen. Dann müssen sich einige davon gegenseitig ziehen.</p>}
             </>
           )}
         </div>
@@ -210,6 +216,41 @@ export function HostApp({ hostKey }: { hostKey: string }) {
               Ja, auslosen!
             </button>
             <button type="button" className="btn btn--quiet btn--small" onClick={close}>Noch nicht</button>
+          </div>
+        </Modal>
+      )}
+
+      {dialog?.kind === "pairs" && (
+        <Modal label="Wer beschenkt wen" onClose={close}>
+          <h2>Wer beschenkt wen?</h2>
+          {pairList ? (
+            <ul className="pairs">
+              {pairList.map((p) => (
+                <li key={p.giver}><strong>{p.giver}</strong> <span aria-hidden>→</span><span className="sr-only"> beschenkt </span> {p.receiver}</li>
+              ))}
+            </ul>
+          ) : (
+            <>
+              <p>Achtung, Spoiler: Hier steht die komplette Auslosung – auch, wer dich beschenkt. Schau nur rein, wenn es ein Problem gibt.</p>
+              <div className="actions">
+                <button
+                  type="button"
+                  className="btn btn--small"
+                  onClick={async () => {
+                    try {
+                      setPairList(await api.pairs());
+                    } catch (err) {
+                      setError(errorText(err instanceof ApiError ? err.code : "server"));
+                    }
+                  }}
+                >
+                  Trotzdem anzeigen
+                </button>
+              </div>
+            </>
+          )}
+          <div className="actions">
+            <button type="button" className="btn btn--quiet btn--small" onClick={close}>Schließen</button>
           </div>
         </Modal>
       )}

@@ -1,4 +1,4 @@
-import type { State } from "./types";
+import { ServiceError, type State } from "./types";
 
 export interface Store {
   read(): Promise<State>;
@@ -57,16 +57,41 @@ export function setStore(store: Store) {
   current = store;
 }
 
-/** Redis when configured (Vercel Marketplace / Upstash env names), otherwise in-memory for local use. */
+/** Finds the Upstash REST settings, also when the Vercel integration added a prefix to the names. */
+export function redisConfig(env: Record<string, string | undefined>): { url: string; token: string } | null {
+  for (const base of ["UPSTASH_REDIS_REST", "KV_REST_API"]) {
+    for (const key of Object.keys(env)) {
+      if (!key.endsWith(`${base}_URL`)) continue;
+      const prefix = key.slice(0, key.length - `${base}_URL`.length);
+      const url = env[key];
+      const token = env[`${prefix}${base}_TOKEN`];
+      if (url && token) return { url, token };
+    }
+  }
+  return null;
+}
+
+export type StorageKind = "redis" | "memory";
+let kind: StorageKind = "memory";
+export const storageKind = () => kind;
+
+/**
+ * Redis when configured, otherwise in-memory for local use.
+ * On Vercel there is no usable memory (every server instance has its own and forgets it),
+ * so a missing database is an error there instead of silently losing entries.
+ */
 export function getStore(): Store {
   if (!current) {
-    const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-    const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
-    if (url && token) current = new RedisStore(url, token);
-    else {
+    const cfg = redisConfig(process.env);
+    if (cfg) {
+      current = new RedisStore(cfg.url, cfg.token);
+      kind = "redis";
+    } else {
+      if (process.env.VERCEL) throw new ServiceError("no_database");
       // survive dev-server module reloads
       const g = globalThis as { __pengomatStore?: Store };
       current = g.__pengomatStore ??= new MemoryStore();
+      kind = "memory";
     }
   }
   return current;

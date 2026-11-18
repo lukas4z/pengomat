@@ -10,6 +10,7 @@ const STATUS: Record<ErrorCode, number> = {
   full: 409,
   too_few: 409,
   already_drawn: 409,
+  no_database: 503,
 };
 
 const digest = (s: string) => createHash("sha256").update(s).digest();

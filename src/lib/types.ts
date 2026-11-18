@@ -25,7 +25,7 @@ export interface Me {
 }
 export interface HostParticipant { id: string; name: string; joinedAt: string; wishCount: number }
 export interface HostView { phase: Phase; budget: string; drawnAt?: string; participants: HostParticipant[] }
-export type ErrorCode = "invalid" | "name_taken" | "closed" | "full" | "unauthorized" | "not_found" | "too_few" | "already_drawn";
+export type ErrorCode = "invalid" | "name_taken" | "closed" | "full" | "unauthorized" | "not_found" | "too_few" | "already_drawn" | "no_database";
 export class ServiceError extends Error {
   constructor(public code: ErrorCode) {
     super(code);

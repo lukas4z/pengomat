@@ -95,6 +95,7 @@ export function errorText(code: string): string {
     case "too_few": return "Mindestens 3 Wichtel nötig.";
     case "already_drawn": return "Es wurde schon ausgelost.";
     case "not_found": return "Das gibt es nicht mehr.";
+    case "no_database": return "Die Datenbank ist nicht verbunden – Einträge würden verloren gehen. Bitte der Gastgeberin Bescheid geben.";
     case "network": return "Keine Verbindung. Bitte versuch es gleich nochmal.";
     default: return "Da ist etwas schiefgegangen. Bitte versuch es nochmal.";
   }

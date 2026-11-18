@@ -18,6 +18,7 @@ export function ParticipantApp({ sync = 0 }: { sync?: number }) {
   const [fresh, setFresh] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const phase = useRef<string | null>(null);
+  const hasMatch = useRef(false);
 
   const load = useCallback(async (withMe: boolean) => {
     try {
@@ -27,9 +28,12 @@ export function ParticipantApp({ sync = 0 }: { sync?: number }) {
       setPub(state);
       setError(null);
       const token = getToken();
-      if (token && (withMe || changed)) {
+      // also retry while the draw is done but this device has not received its match yet
+      if (token && (withMe || changed || (state.phase === "drawn" && !hasMatch.current))) {
         try {
-          setMe(await api.me(token));
+          const mine = await api.me(token);
+          hasMatch.current = !!mine.match;
+          setMe(mine);
         } catch (err) {
           if (err instanceof ApiError && err.code === "unauthorized") {
             clearToken();
@@ -45,16 +49,25 @@ export function ParticipantApp({ sync = 0 }: { sync?: number }) {
 
   useEffect(() => {
     // personal link: ?t=<token> signs this device in, then disappears from the address bar
+    let linkToken: string | null = null;
     try {
       const url = new URL(window.location.href);
-      const t = url.searchParams.get("t");
-      if (t) {
-        setToken(t);
+      linkToken = url.searchParams.get("t");
+      if (linkToken) {
         url.searchParams.delete("t");
         window.history.replaceState(null, "", url.pathname + url.search + url.hash);
       }
     } catch {}
-    load(true);
+    (async () => {
+      if (linkToken) {
+        // a link never replaces a login that still works, and a dead link changes nothing
+        const existing = getToken();
+        const works = (t: string) => api.me(t).then(() => true, () => false);
+        const keep = !!existing && existing !== linkToken && (await works(existing));
+        if (!keep && (await works(linkToken))) setToken(linkToken);
+      }
+      await load(true);
+    })();
     const id = window.setInterval(() => {
       if (document.visibilityState === "visible") load(false);
     }, POLL_MS);

@@ -22,7 +22,7 @@ export function PersonalLink({ token }: { token: string }) {
   return (
     <div className="linkbox">
       <h3>Dein persönlicher Link</h3>
-      <p>Damit kommst du auch auf einem anderen Gerät wieder rein. Am besten gleich an dich selbst schicken.</p>
+      <p>Damit kommst du auch auf einem anderen Gerät wieder rein. Am besten gleich an dich selbst schicken – aber nicht an andere weitergeben.</p>
       <input id="personal-link" readOnly value={link} onFocus={(e) => e.currentTarget.select()} aria-label="Dein persönlicher Link" />
       <div className="linkbox__actions">
         <button type="button" className="btn btn--quiet btn--small" onClick={copy}>{copied ? "Kopiert!" : "Link kopieren"}</button>

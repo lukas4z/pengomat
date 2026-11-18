@@ -147,9 +147,13 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     mutedRef.current = m;
     setMuted(m);
     // browsers only allow sound after the first touch or key press
-    const first = () => start();
-    window.addEventListener("pointerdown", first, { once: true });
-    window.addEventListener("keydown", first, { once: true });
+    // (on iPhones only finger-up and click count), so keep trying until the audio actually runs
+    const events = ["pointerdown", "pointerup", "click", "keydown"] as const;
+    const first = () => {
+      start();
+      if (engine.current?.ctx.state === "running") events.forEach((ev) => window.removeEventListener(ev, first));
+    };
+    events.forEach((ev) => window.addEventListener(ev, first));
     const onVisible = () => {
       const e = engine.current;
       if (!e) return;
@@ -158,8 +162,7 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
-      window.removeEventListener("pointerdown", first);
-      window.removeEventListener("keydown", first);
+      events.forEach((ev) => window.removeEventListener(ev, first));
       document.removeEventListener("visibilitychange", onVisible);
       if (timer.current !== null) window.clearInterval(timer.current);
     };

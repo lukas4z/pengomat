@@ -142,8 +142,8 @@ export function Reveal({ me }: { me: Me }) {
                 type="button"
                 className="reveal__gift"
                 aria-label="Geschenk schütteln"
+                onClick={askMotion}
                 onPointerDown={(e) => {
-                  askMotion();
                   drag.current = { x: e.clientX, dir: 0, turns: 0 };
                   shake();
                 }}

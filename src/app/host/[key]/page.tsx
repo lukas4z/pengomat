@@ -7,7 +7,10 @@ export const metadata: Metadata = { title: "Pengomat – Gastgeber", robots: { i
 
 export default async function HostPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = await params;
-  const decoded = decodeURIComponent(key);
+  let decoded = "";
+  try {
+    decoded = decodeURIComponent(key);
+  } catch {}
   if (!isHostKey(decoded)) notFound();
   return <HostApp hostKey={decoded} />;
 }

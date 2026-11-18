@@ -23,6 +23,10 @@ const MELODY: [string | null, number][] = [
 const BASS = ["C3", "C3", "C3", "C3", "G3", "G3", "C3", "C3", "F3", "F3", "C3", "C3", "F3", "F3", "C3", "C3", "G3", "G3", "C3", "C3", "C3", "G3", "C3", "C3"];
 const EIGHTH = 0.4;
 
+// Recorded Christmas music (see CREDITS.md). The music box above only plays if these cannot load.
+const TRACKS = ["jingle-bells", "deck-the-halls", "up-on-a-housetop", "angels-we-have-heard", "sugar-plum-fairy"].map((n) => `/audio/${n}.mp3`);
+const MUSIC_VOLUME = 0.32;
+
 type Engine = { ctx: AudioContext; master: GainNode; music: GainNode; noise: AudioBuffer };
 
 function createEngine(): Engine | null {
@@ -114,10 +118,32 @@ export function SoundProvider({ children }: { children: ReactNode }) {
   const engine = useRef<Engine | null>(null);
   const timer = useRef<number | null>(null);
   const cursor = useRef({ i: 0, at: 0, eighths: 0 });
+  const player = useRef<HTMLAudioElement | null>(null);
+  const track = useRef(Math.floor(Math.random() * TRACKS.length));
+  const useBox = useRef(false);
+
+  const playMusic = useCallback(() => {
+    if (mutedRef.current || useBox.current) return;
+    if (!player.current) {
+      const a = new Audio(TRACKS[track.current]);
+      a.volume = MUSIC_VOLUME;
+      a.preload = "auto";
+      a.addEventListener("ended", () => {
+        track.current = (track.current + 1) % TRACKS.length;
+        a.src = TRACKS[track.current];
+        a.play().catch(() => {});
+      });
+      a.addEventListener("error", () => {
+        useBox.current = true; // files missing: fall back to the music box
+      });
+      player.current = a;
+    }
+    player.current.play().catch(() => {});
+  }, []);
 
   const schedule = useCallback(() => {
     const e = engine.current;
-    if (!e || mutedRef.current) return;
+    if (!e || mutedRef.current || !useBox.current) return;
     const c = cursor.current;
     if (c.at < e.ctx.currentTime) c.at = e.ctx.currentTime + 0.1;
     while (c.at < e.ctx.currentTime + 1.2) {
@@ -140,7 +166,8 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     if (!e) return;
     if (e.ctx.state === "suspended" && !mutedRef.current) e.ctx.resume().catch(() => {});
     if (timer.current === null) timer.current = window.setInterval(schedule, 300);
-  }, [schedule]);
+    playMusic();
+  }, [schedule, playMusic]);
 
   useEffect(() => {
     const m = getFlag(MUTE_FLAG);
@@ -151,22 +178,27 @@ export function SoundProvider({ children }: { children: ReactNode }) {
     const events = ["pointerdown", "pointerup", "click", "keydown"] as const;
     const first = () => {
       start();
-      if (engine.current?.ctx.state === "running") events.forEach((ev) => window.removeEventListener(ev, first));
+      const musicOn = mutedRef.current || useBox.current || (player.current && !player.current.paused);
+      if (engine.current?.ctx.state === "running" && musicOn) events.forEach((ev) => window.removeEventListener(ev, first));
     };
     events.forEach((ev) => window.addEventListener(ev, first));
     const onVisible = () => {
       const e = engine.current;
+      const hidden = document.visibilityState === "hidden";
+      if (hidden) player.current?.pause();
+      else playMusic();
       if (!e) return;
-      if (document.visibilityState === "hidden") e.ctx.suspend().catch(() => {});
+      if (hidden) e.ctx.suspend().catch(() => {});
       else if (!mutedRef.current) e.ctx.resume().catch(() => {});
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => {
+      player.current?.pause();
       events.forEach((ev) => window.removeEventListener(ev, first));
       document.removeEventListener("visibilitychange", onVisible);
       if (timer.current !== null) window.clearInterval(timer.current);
     };
-  }, [start]);
+  }, [start, playMusic]);
 
   const api = useMemo<SoundApi>(
     () => ({
@@ -182,6 +214,7 @@ export function SoundProvider({ children }: { children: ReactNode }) {
         mutedRef.current = next;
         setMuted(next);
         setFlag(MUTE_FLAG, next);
+        if (next) player.current?.pause();
         start();
         const e = engine.current;
         if (!e) return;

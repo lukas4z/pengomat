@@ -21,7 +21,12 @@ export function Fireplace({ children }: { children?: ReactNode }) {
     return (
       <section className="hearth hearth--film" aria-label="Kamin">
         {/* eslint-disable @next/next/no-img-element */}
-        <img className="hearth__top" src="/film/hearth-top.webp" alt="" draggable={false} />
+        <div className="hearth__top">
+          <img src="/film/hearth-top.webp" alt="" draggable={false} />
+          <i className="flamelet flamelet--glow" style={{ left: "20.2%", top: "6%" }} />
+          <i className="flamelet flamelet--glow" style={{ left: "32.2%", top: "15%", animationDelay: "-0.6s" }} />
+          <i className="hearth__startwinkle" />
+        </div>
         <div className="hearth__band">
           <div className="hearth__socks">{children}</div>
         </div>

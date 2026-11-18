@@ -63,6 +63,19 @@ const STARS = Array.from({ length: 16 }, (_, i) => ({
   dur: 4 + (i % 4),
 }));
 
+const MOTES = Array.from({ length: 14 }, (_, i) => ({ left: (i * 29 + 5) % 100, size: 4 + (i % 4) * 2, dur: 14 + (i % 5) * 4, delay: -(i * 2.3) }));
+
+/** Warm specks of light drifting slowly up through the room. */
+function Motes() {
+  return (
+    <div className="motes" aria-hidden>
+      {MOTES.map((m, i) => (
+        <i key={i} style={{ left: `${m.left}%`, width: m.size, height: m.size, animationDuration: `${m.dur}s`, animationDelay: `${m.delay}s` }} />
+      ))}
+    </div>
+  );
+}
+
 /** Little stars on the wall that sparkle every few seconds. */
 function Twinkles() {
   return (
@@ -79,13 +92,22 @@ const TREE_BAUBLES = [
   { x: 22, y: 70, c: "#f4c04e", d: 0.4 }, { x: 72, y: 66, c: "#e2574c", d: 1.1 }, { x: 54, y: 80, c: "#e2574c", d: 1.9 },
 ];
 
-/** The rendered tree with a twinkling star and softly swinging baubles on top. */
-function FilmTree() {
+const TREE_LIGHTS = [
+  { x: 48, y: 22, c: "#ffe9a8" }, { x: 36, y: 34, c: "#ff8f7a" }, { x: 60, y: 33, c: "#9fd8ff" }, { x: 28, y: 50, c: "#ffe9a8" },
+  { x: 52, y: 48, c: "#ffb0e0" }, { x: 70, y: 52, c: "#ffe9a8" }, { x: 20, y: 64, c: "#9fd8ff" }, { x: 40, y: 68, c: "#ffe9a8" },
+  { x: 62, y: 70, c: "#ff8f7a" }, { x: 80, y: 74, c: "#ffe9a8" }, { x: 30, y: 82, c: "#ffb0e0" }, { x: 68, y: 86, c: "#9fd8ff" },
+];
+
+/** The rendered tree with fairy lights, a glowing star and softly swinging baubles on top. */
+export function FilmTree({ className = "" }: { className?: string }) {
   return (
-    <div className="deco-tree">
+    <div className={`deco-tree ${className}`} aria-hidden>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/film/tree.webp" alt="" draggable={false} />
       <span className="deco-tree__star" />
+      {TREE_LIGHTS.map((l, i) => (
+        <span key={`l${i}`} className="deco-tree__light" style={{ left: `${l.x}%`, top: `${l.y}%`, background: l.c, color: l.c, animationDelay: `-${(i * 0.37) % 2.6}s` }} />
+      ))}
       {TREE_BAUBLES.map((b, i) => (
         <span key={i} className="deco-tree__bauble" style={{ left: `${b.x}%`, top: `${b.y}%`, background: `radial-gradient(circle at 35% 30%, #fff8 0 12%, ${b.c} 40%, #0005 130%)`, animationDelay: `-${b.d}s` }} />
       ))}
@@ -101,14 +123,16 @@ function FilmFloor() {
   return (
     <div className="floor floor--film" aria-hidden>
       <div className="floor__row">
-        <FilmTree />
-        {img("sack")}
+        {img("trees-small")}
+        {img("sack", "deco--wiggle")}
         {img("gingerbread")}
         <span className="deco-candles">
           {img("candles")}
           <i className="deco-candles__glow" />
+          <i className="flamelet" style={{ left: "27%", top: "2%" }} />
+          <i className="flamelet" style={{ left: "66%", top: "4%", animationDelay: "-0.5s" }} />
         </span>
-        {img("globe")}
+        {img("globe", "deco--wiggle-slow")}
         {img("horse", "deco--rock")}
       </div>
     </div>
@@ -124,6 +148,7 @@ export function Room({ children }: { children: ReactNode }) {
       {film && <div className="room__backdrop" aria-hidden />}
       <div className="room__light" aria-hidden />
       <Twinkles />
+      {film && <Motes />}
       <Garland />
       {film ? null : <Wreath />}
       {film ? null : <Frame />}

@@ -497,7 +497,8 @@ html[data-theme="film"] .countdown-note, html[data-theme="film"] .section-title,
 
 /* fireplace from slices */
 .hearth--film { max-width: 430px; filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.5)); }
-.hearth--film .hearth__top { display: block; width: 100%; position: relative; z-index: 2; margin-bottom: -1px; }
+.hearth--film .hearth__top { position: relative; z-index: 2; margin-bottom: -1px; }
+.hearth--film .hearth__top img { display: block; width: 100%; }
 .hearth__band { margin: 0 6.4%; padding: 4px 6px 0; min-height: 70px; background-color: #c4664a; background-image: linear-gradient(rgba(96, 38, 24, 0.55) 3px, transparent 3px), linear-gradient(90deg, rgba(96, 38, 24, 0.5) 3px, transparent 3px), linear-gradient(90deg, rgba(96, 38, 24, 0.5) 3px, transparent 3px), linear-gradient(90deg, rgba(60, 20, 10, 0.35), transparent 14% 86%, rgba(60, 20, 10, 0.35)); background-size: 100% 26px, 58px 52px, 58px 52px, 100% 100%; background-position: 0 bottom, 0 bottom, 29px calc(100% - 26px), 0 0; box-shadow: inset 0 14px 14px -8px rgba(40, 14, 8, 0.6); }
 .hearth--film .hearth__socks { position: relative; z-index: 3; margin-bottom: -34px; }
 .hearth__bottom { position: relative; }
@@ -556,3 +557,33 @@ html[data-theme="film"] .sound-toggle { border: 3px solid #8a5636; box-shadow: 0
 .hearth__embers i { position: absolute; bottom: 20%; width: 5px; height: 5px; border-radius: 50%; background: #ffd27a; box-shadow: 0 0 6px 2px rgba(255, 170, 60, 0.8); opacity: 0; animation: ember 3s ease-out infinite; }
 @keyframes flame { 0% { transform: scale(1, 0.86) skewX(-5deg); opacity: 0.75; } 50% { transform: scale(0.92, 1.06) skewX(3deg); opacity: 0.95; } 100% { transform: scale(1.05, 0.94) skewX(6deg); opacity: 0.8; } }
 @keyframes ember { 0% { opacity: 0; transform: translate(0, 0) scale(1); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(14px, -150px) scale(0.3); } }
+
+/* ---------- more life ---------- */
+.flamelet { position: absolute; width: 5.5%; aspect-ratio: 1 / 1.9; translate: -50% 0; border-radius: 50% 50% 50% 50% / 66% 66% 34% 34%; background: radial-gradient(ellipse at 50% 72%, #fffbe0 0 22%, #ffd257 50%, rgba(255, 140, 40, 0.7) 74%, transparent 82%); transform-origin: 50% 100%; mix-blend-mode: screen; animation: flame 0.8s ease-in-out infinite alternate; pointer-events: none; }
+.deco-candles .flamelet { width: 20%; }
+.flamelet--glow::after { content: ""; position: absolute; left: 50%; top: 40%; width: 700%; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 205, 120, 0.42), transparent 62%); animation: candle 1.5s ease-in-out infinite alternate; }
+.hearth__startwinkle { position: absolute; left: 77.5%; top: 2%; width: 9%; aspect-ratio: 1; translate: -50% -20%; border-radius: 50%; background: radial-gradient(circle, #fff7c2 0 16%, rgba(255, 221, 120, 0.7) 30%, transparent 65%); animation: starglow 2.8s ease-in-out infinite; pointer-events: none; }
+
+.stage__tree { position: absolute; left: -9%; bottom: -5%; height: 78%; z-index: 1; }
+.stage .peng { z-index: 2; }
+html[data-theme="film"] .stage .peng { left: 60%; }
+.deco-tree__light { position: absolute; width: 5%; aspect-ratio: 1; border-radius: 50%; translate: -50% -50%; box-shadow: 0 0 8px 3px currentColor; animation: fairy 2.6s ease-in-out infinite; }
+.deco--trees-small { height: clamp(56px, 16vw, 130px); }
+.deco--wiggle { animation: wiggle 5s ease-in-out infinite; transform-origin: 50% 100%; }
+.deco--wiggle-slow { animation: wiggle 7s 1.5s ease-in-out infinite; transform-origin: 50% 100%; }
+
+.motes { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+.motes i { position: absolute; bottom: -20px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 226, 160, 0.9), rgba(255, 190, 110, 0) 70%); opacity: 0; animation: mote linear infinite; }
+
+.garland--film { animation: garlandsway 7s ease-in-out infinite, shimmer 3.2s ease-in-out infinite; }
+.countdown__n--tick { animation: tick 0.45s cubic-bezier(0.2, 1.5, 0.4, 1); }
+.btn--wide { position: relative; overflow: hidden; }
+.btn--wide::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.38), transparent); animation: shine 4.5s ease-in-out infinite; pointer-events: none; }
+.window--film::after { content: ""; position: absolute; left: 58%; top: 12%; width: 30%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255, 244, 190, 0.4), transparent 65%); animation: starglow 5s ease-in-out infinite; pointer-events: none; }
+
+@keyframes fairy { 0%, 100% { opacity: 0.25; transform: scale(0.7); } 50% { opacity: 1; transform: scale(1.15); } }
+@keyframes wiggle { 0%, 82%, 100% { rotate: 0deg; } 86% { rotate: -5deg; } 90% { rotate: 4deg; } 94% { rotate: -2deg; } }
+@keyframes mote { 0% { opacity: 0; transform: translate(0, 0); } 12% { opacity: 0.8; } 85% { opacity: 0.5; } 100% { opacity: 0; transform: translate(40px, -110vh); } }
+@keyframes shimmer { 0%, 100% { filter: drop-shadow(0 8px 8px rgba(0, 0, 0, 0.45)) brightness(1); } 50% { filter: drop-shadow(0 8px 8px rgba(0, 0, 0, 0.45)) brightness(1.14) saturate(1.15); } }
+@keyframes tick { from { transform: translateY(-7px) scale(1.08); opacity: 0.4; } }
+@keyframes shine { 0%, 70% { left: -60%; } 100% { left: 130%; } }

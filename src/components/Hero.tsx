@@ -1,5 +1,6 @@
 import { Countdown } from "./Countdown";
 import { Peng } from "./Peng";
+import { StageTree } from "./StageTree";
 import { Window } from "./scene/Window";
 import { Wordmark } from "./Wordmark";
 
@@ -10,6 +11,7 @@ export function Hero() {
       <p className="tagline">Peng lost aus. Du schenkst.</p>
       <div className="stage">
         <Window />
+        <StageTree />
         <Peng pose="look" />
       </div>
       <Countdown />

@@ -18,7 +18,7 @@ export function Countdown() {
     <div className="countdown" role="timer" aria-label="Zeit bis zum Wichteln am 26. Dezember">
       {parts.map(([label, n]) => (
         <div key={label} className="countdown__tile">
-          <span className="countdown__n">{left === null ? "–" : String(n).padStart(2, "0")}</span>
+          <span key={label === "Sek" ? n : label} className={`countdown__n${label === "Sek" && left !== null ? " countdown__n--tick" : ""}`}>{left === null ? "–" : String(n).padStart(2, "0")}</span>
           <span className="countdown__l">{label}</span>
         </div>
       ))}

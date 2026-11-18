@@ -619,3 +619,4 @@ html[data-theme="film"] .songs { border: 4px solid #8a5636; box-shadow: 0 0 0 2p
 .songs__item--on { background: rgba(63, 125, 87, 0.18); font-weight: 800; }
 .songs__dot { flex: none; width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid var(--ink); }
 .songs__item--on .songs__dot { background: var(--green); box-shadow: 0 0 0 3px rgba(63, 125, 87, 0.3); animation: fairy 1.6s ease-in-out infinite; }
+.songs__item--playing .songs__dot { background: var(--gold); animation: fairy 1.6s ease-in-out infinite; }

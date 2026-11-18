@@ -130,6 +130,8 @@ export function SoundProvider({ children }: { children: ReactNode }) {
   const useBox = useRef(false);
   const [current, setCurrent] = useState(track.current);
   const [menu, setMenu] = useState(false);
+  const [shuffle, setShuffle] = useState(true);
+  const shuffleRef = useRef(true);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const playMusic = useCallback(() => {
@@ -139,7 +141,8 @@ export function SoundProvider({ children }: { children: ReactNode }) {
       a.volume = MUSIC_VOLUME;
       a.preload = "auto";
       a.addEventListener("ended", () => {
-        track.current = (track.current + 1) % TRACKS.length;
+        // random mode never repeats the song that just ended
+        track.current = shuffleRef.current ? (track.current + 1 + Math.floor(Math.random() * (TRACKS.length - 1))) % TRACKS.length : (track.current + 1) % TRACKS.length;
         setCurrent(track.current);
         a.src = TRACKS[track.current];
         a.play().catch(() => {});
@@ -213,7 +216,10 @@ export function SoundProvider({ children }: { children: ReactNode }) {
 
   /** Pick a song from the list: plays it right away and turns the sound on if it was off. */
   const choose = useCallback(
-    (i: number) => {
+    (pick: number | "random") => {
+      const i = pick === "random" ? (track.current + 1 + Math.floor(Math.random() * (TRACKS.length - 1))) % TRACKS.length : pick;
+      shuffleRef.current = pick === "random";
+      setShuffle(pick === "random");
       track.current = i;
       setCurrent(i);
       setMenu(false);
@@ -278,8 +284,12 @@ export function SoundProvider({ children }: { children: ReactNode }) {
         {menu && (
           <div className="songs" role="menu" aria-label="Lied auswählen">
             <p className="songs__title">Welches Lied?</p>
+            <button type="button" role="menuitemradio" aria-checked={shuffle} className={`songs__item${shuffle ? " songs__item--on" : ""}`} onClick={() => choose("random")}>
+              <span className="songs__dot" aria-hidden />
+              Zufall
+            </button>
             {SONGS.map(([file, title], i) => (
-              <button key={file} type="button" role="menuitemradio" aria-checked={i === current} className={`songs__item${i === current ? " songs__item--on" : ""}`} onClick={() => choose(i)}>
+              <button key={file} type="button" role="menuitemradio" aria-checked={!shuffle && i === current} className={`songs__item${!shuffle && i === current ? " songs__item--on" : ""}${shuffle && i === current ? " songs__item--playing" : ""}`} onClick={() => choose(i)}>
                 <span className="songs__dot" aria-hidden />
                 {title}
               </button>

@@ -171,6 +171,11 @@ Phase Ausgelost, nicht eingetragen:
   variieren. Peng: grau mit heller Brust, rote Mütze mit Glöckchen,
   Wichtel-Outfit; Posen: sitzend-zufrieden (Kopf), genervt liegend (Formular),
   jubelnd (Bestätigung), kullernd-lachend (Enthüllung).
+- **Ton des Looks (Auftraggeber):** in erster Linie cozy, erst danach süß.
+  Chibi/Sticker nur dosiert – warme, ruhige Stube, keine quietschbunte
+  Sticker-Flut. Es machen auch Großeltern mit: große, gut lesbare Schrift
+  (Fließtext ≥ 18 px), hoher Kontrast, große Tippflächen, klare Texte,
+  ein Schritt nach dem anderen. Animationen schön, aber ruhig.
 - Illustrationen der Szene als handgebaute SVGs; Peng als gelieferte Bilder.
 - Peng-Bildplätze (transparenter Hintergrund, PNG/WebP): `peng-header`
   (Wichtel-Outfit, für den Kopf), `peng-form` (schaut übers Formular),
@@ -181,6 +186,19 @@ Phase Ausgelost, nicht eingetragen:
   bevor die Funktionen gebaut werden. Auftraggeber-Wunsch: mit Design/Peng/
   Schriftzug anfangen; installierte Frontend-Skills und echte
   Weihnachtsseiten als Referenz heranziehen.
+
+## Nachträge des Auftraggebers (während der Umsetzung)
+
+- **Zwei Stile parallel:** Die Seite wird in zwei Looks gebaut, funktional
+  und in den Animationen identisch: (a) Chibi-Sticker-Look, (b) cozy
+  Animationsfilm-Look (weich, plastisch, warmes Licht – auch Socken, Kamin,
+  Hintergrund). Umschaltbar zum Vergleichen; am Ende wird einer Standard.
+- **Idee für später (noch nicht umsetzen):** Blick von oben auf einen
+  weihnachtlichen Tisch; das Formular liegt dort als Schriftrolle, daneben
+  Kekse etc. Nach dem Abschicken schwenkt die „Kamera" vom Tisch nach oben
+  auf Weihnachtsbaum und Socken, dort steht der Countdown.
+- Animationen für jeden Schritt, z. B. Peng reagiert, wenn das Formular
+  abgeschickt wurde.
 
 ## Entscheidungen des Builders nach Gegenlesen (vom Auftraggeber zu prüfen)
 

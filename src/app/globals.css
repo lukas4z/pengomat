@@ -587,3 +587,13 @@ html[data-theme="film"] .stage .peng { left: 60%; }
 @keyframes shimmer { 0%, 100% { filter: drop-shadow(0 8px 8px rgba(0, 0, 0, 0.45)) brightness(1); } 50% { filter: drop-shadow(0 8px 8px rgba(0, 0, 0, 0.45)) brightness(1.14) saturate(1.15); } }
 @keyframes tick { from { transform: translateY(-7px) scale(1.08); opacity: 0.4; } }
 @keyframes shine { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+
+/* fancy subtitle under the wordmark */
+.tagline { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px; font-family: var(--font-display), Georgia, serif; font-style: italic; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 60; font-weight: 700; font-size: clamp(19px, 5.6vw, 30px); letter-spacing: 0.01em; opacity: 1; white-space: nowrap; }
+.tagline::before, .tagline::after { content: ""; flex: none; width: 15px; height: 15px; background: var(--gold); clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); animation: tagstar 3.6s ease-in-out infinite; }
+.tagline::after { animation-delay: -1.8s; }
+.tagline__text { color: var(--gold); background: linear-gradient(100deg, #f1b540 0%, #ffe9a8 28%, #fff7d6 40%, #ffe9a8 52%, #f1b540 80%) 0 0 / 220% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: goldsweep 6s ease-in-out infinite; }
+html[data-theme="film"] .tagline { text-shadow: none; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6)); }
+html[data-theme="sticker"] .tagline { filter: drop-shadow(0 3px 0 var(--ink)); }
+@keyframes goldsweep { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+@keyframes tagstar { 0%, 100% { transform: scale(0.75) rotate(0deg); opacity: 0.7; } 50% { transform: scale(1.15) rotate(45deg); opacity: 1; } }

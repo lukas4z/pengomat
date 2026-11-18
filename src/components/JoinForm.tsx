@@ -39,7 +39,6 @@ export function JoinForm({ budget, notice, leaving, onJoined }: { budget: string
   return (
     <Card pose="sleep" mood="sleep" budget={budget} className={leaving ? "card--leaving" : "card--in"}>
       <h2>Dein Wunschzettel</h2>
-      <p className="card__lead">Trag dich ein – Peng kümmert sich um den Rest.</p>
       {notice && <p className="notice" role="status">{notice}</p>}
       <form onSubmit={submit} noValidate>
         <div className="field">

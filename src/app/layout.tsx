@@ -8,7 +8,7 @@ const display = Fraunces({ variable: "--font-display", subsets: ["latin"], axes:
 const text = Nunito({ variable: "--font-text", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Pengomat – Peng lost aus. Du schenkst.",
+  title: "Pengomat – Weihnachtswichteln 2026",
   description: "Der Wichtel-o-mat mit Kater Peng.",
   robots: { index: false, follow: false },
 };

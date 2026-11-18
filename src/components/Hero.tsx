@@ -8,7 +8,7 @@ export function Hero() {
   return (
     <header className="hero">
       <Wordmark />
-      <p className="tagline">Peng lost aus. Du schenkst.</p>
+      <p className="tagline"><span className="tagline__text">Weihnachtswichteln 2026</span></p>
       <div className="stage">
         <Window />
         <StageTree />

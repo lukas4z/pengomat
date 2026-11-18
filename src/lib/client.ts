@@ -1,26 +1,51 @@
 import type { ErrorCode, HostView, Me, PublicState } from "./types";
 
-const TOKEN_KEY = "pengomat-token";
-let memoryToken: string | null = null;
+// One device can hold several people (e.g. parents entering their children): a list of tokens plus the active one.
+const TOKEN_KEY = "pengomat-token"; // active person (also the only key older versions wrote)
+const TOKENS_KEY = "pengomat-tokens";
+let memoryTokens: string[] = [];
+let memoryActive: string | null = null;
 
-export function getToken(): string | null {
+export function getTokens(): string[] {
   try {
-    return window.localStorage.getItem(TOKEN_KEY) ?? memoryToken;
+    const raw = window.localStorage.getItem(TOKENS_KEY);
+    const list: string[] = raw ? JSON.parse(raw) : [];
+    const old = window.localStorage.getItem(TOKEN_KEY);
+    const all = [...list, ...(old ? [old] : []), ...memoryTokens].filter((t) => typeof t === "string" && t);
+    return [...new Set(all)];
   } catch {
-    return memoryToken;
+    return [...new Set(memoryTokens)];
   }
 }
+export function saveTokens(tokens: string[]) {
+  memoryTokens = [...new Set(tokens)];
+  try {
+    window.localStorage.setItem(TOKENS_KEY, JSON.stringify(memoryTokens));
+    const active = window.localStorage.getItem(TOKEN_KEY);
+    if (active && !memoryTokens.includes(active)) window.localStorage.removeItem(TOKEN_KEY);
+  } catch {}
+  if (memoryActive && !memoryTokens.includes(memoryActive)) memoryActive = null;
+}
+/** The person this device currently shows. */
+export function getToken(): string | null {
+  const tokens = getTokens();
+  let active: string | null = memoryActive;
+  try {
+    active = window.localStorage.getItem(TOKEN_KEY) ?? memoryActive;
+  } catch {}
+  return active && tokens.includes(active) ? active : (tokens[0] ?? null);
+}
+/** Adds the person to this device (if new) and shows them. */
 export function setToken(token: string) {
-  memoryToken = token;
+  memoryActive = token;
+  saveTokens([...getTokens(), token]);
   try {
     window.localStorage.setItem(TOKEN_KEY, token);
   } catch {}
 }
-export function clearToken() {
-  memoryToken = null;
-  try {
-    window.localStorage.removeItem(TOKEN_KEY);
-  } catch {}
+export function clearToken(token?: string) {
+  const gone = token ?? getToken();
+  saveTokens(getTokens().filter((t) => t !== gone));
 }
 
 /** Small per-device flags (reveal seen, sound muted); never required for the flow. */

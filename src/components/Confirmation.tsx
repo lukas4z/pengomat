@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { api, ApiError, errorText, getToken, personalLink } from "@/lib/client";
+import { api, ApiError, errorText, personalLink } from "@/lib/client";
 import type { Me } from "@/lib/types";
 import { Card } from "./Card";
 import { checkWishes, WishFields } from "./WishFields";
@@ -21,7 +21,7 @@ export function PersonalLink({ token }: { token: string }) {
   }
   return (
     <div className="linkbox">
-      <h3>Dein persönlicher Link</h3>
+      <h3>Persönlicher Link</h3>
       <p>Damit kommst du auch auf einem anderen Gerät wieder rein. Am besten gleich an dich selbst schicken – aber nicht an andere weitergeben.</p>
       <input id="personal-link" readOnly value={link} onFocus={(e) => e.currentTarget.select()} aria-label="Dein persönlicher Link" />
       <div className="linkbox__actions">
@@ -36,8 +36,7 @@ export function PersonalLink({ token }: { token: string }) {
   );
 }
 
-export function Confirmation({ me, fresh, onChange }: { me: Me; fresh: boolean; onChange: (me: Me) => void }) {
-  const token = getToken();
+export function Confirmation({ me, token, fresh, onChange, onAdd }: { me: Me; token: string; fresh: boolean; onChange: (me: Me) => void; onAdd: () => void }) {
   const [editing, setEditing] = useState(false);
   const [wishes, setWishes] = useState(me.wishes);
   const [error, setError] = useState<string>();
@@ -77,7 +76,9 @@ export function Confirmation({ me, fresh, onChange }: { me: Me; fresh: boolean; 
           <button type="button" className="link" onClick={() => { setWishes(me.wishes); setEditing(true); }}>Wünsche ändern</button>
         </div>
       )}
-      {token && <PersonalLink token={token} />}
+      <button type="button" className="btn btn--green btn--wide" onClick={onAdd}>+ Noch jemanden eintragen</button>
+      <p className="field__hint field__hint--center">Zum Beispiel für Kinder, die kein eigenes Handy haben.</p>
+      <PersonalLink token={token} />
     </Card>
   );
 }

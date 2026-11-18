@@ -52,6 +52,21 @@ const log = (ok, msg) => console.log(`${ok ? "PASS" : "FAIL"}  ${msg}`);
   await p.waitForSelector("text=Du bist dabei, Mia!");
   log((await p.locator("text=Sehr warme Socken").count()) === 1, "edited wish persists after reload");
 
+  // a second person (a child) on the same phone
+  await p.click("text=+ Noch jemanden eintragen");
+  await p.waitForSelector("text=Noch ein Wunschzettel");
+  await p.fill("#name", "Ben");
+  await p.fill("#wish0", "Lego");
+  await p.click("button[type=submit]");
+  await p.waitForSelector("text=Du bist dabei, Ben!");
+  await p.reload();
+  await p.waitForSelector(".people__chip");
+  log((await p.locator(".people__chip").allInnerTexts()).join(",") === "Mia,Ben", "two people on one phone survive a reload");
+  await p.screenshot({ path: `shots/${stil}-3-zwei-personen.png` });
+  await p.locator(".people__chip", { hasText: "Mia" }).click();
+  await p.waitForSelector("text=Du bist dabei, Mia!");
+  log((await p.locator("text=Sehr warme Socken").count()) === 1 && (await p.locator("text=Lego").count()) === 0, "switching shows each person's own wishes");
+
   const link = await p.inputValue("#personal-link");
   const blocked = await b.newContext({ viewport: { width: 390, height: 844 } });
   await blocked.addInitScript(() => {
@@ -91,7 +106,7 @@ const log = (ok, msg) => console.log(`${ok ? "PASS" : "FAIL"}  ${msg}`);
   for (const [name, wish] of [["Oma Inge", "Selbstgebackene Plätzchen"], ["Jonas", "Kopfhörer"]])
     await fetch(`${base}/api/join`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, wishes: [wish] }) });
   const list = await (await fetch(`${base}/api/host/participants`, { headers: hostHeaders })).json();
-  await fetch(`${base}/api/host/participants/${list.participants[1].id}`, { method: "DELETE", headers: hostHeaders });
+  await fetch(`${base}/api/host/participants/${list.participants.find((x) => x.name === "Jonas").id}`, { method: "DELETE", headers: hostHeaders });
   await fetch(`${base}/api/join`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: "Opa Karl", wishes: ["Ein Schal"] }) });
   await fetch(`${base}/api/host/budget`, { method: "PUT", headers: hostHeaders, body: JSON.stringify({ budget: "15 €" }) });
   await fetch(`${base}/api/host/draw`, { method: "POST", headers: hostHeaders });
@@ -115,6 +130,15 @@ const log = (ok, msg) => console.log(`${ok ? "PASS" : "FAIL"}  ${msg}`);
   log(name !== "Mia" && name.length > 1, `three shakes reveal someone else (${name})`);
   await p.click("text=Alles klar!");
   await p.waitForTimeout(700);
+  await p.locator(".people__chip", { hasText: "Ben" }).click();
+  await p.waitForSelector(".reveal__gift");
+  for (let i = 0; i < 3; i++) { await p.locator(".reveal__gift").tap(); await p.waitForTimeout(700); }
+  await p.waitForSelector(".reveal__card .match__name");
+  const benMatch = await p.locator(".reveal__card .match__name").innerText();
+  log(benMatch !== "Ben" && benMatch !== name, `the second person gets their own present (${benMatch})`);
+  await p.click("text=Alles klar!");
+  await p.locator(".people__chip", { hasText: "Mia" }).click();
+  await p.waitForTimeout(500);
   await p.reload();
   await p.waitForSelector(".card .match__name");
   log((await p.locator(".reveal").count()) === 0, "after reload the result shows directly");
@@ -129,6 +153,7 @@ const log = (ok, msg) => console.log(`${ok ? "PASS" : "FAIL"}  ${msg}`);
   await d.waitForTimeout(1200);
   await d.screenshot({ path: `shots/${stil}-desktop.png` });
 
-  log(errors.length === 0, `no console errors ${errors.slice(0, 3).join(" | ")}`);
+  const real = errors.filter((e) => !e.includes("401")); // checking a stale link is an expected 401
+  log(real.length === 0, `no unexpected console errors ${real.slice(0, 3).join(" | ")}`);
   await b.close();
 })().catch((e) => { console.error("FAIL  script crashed:", e.message.split("\n")[0]); process.exit(1); });

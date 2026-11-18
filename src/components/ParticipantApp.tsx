@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, ApiError, clearToken, errorText, getToken, setToken } from "@/lib/client";
+import { api, ApiError, clearToken, errorText, getToken, getTokens, setToken } from "@/lib/client";
 import type { Me, PublicState } from "@/lib/types";
 import { Card } from "./Card";
 import { Confirmation } from "./Confirmation";
@@ -8,47 +8,59 @@ import { JoinForm } from "./JoinForm";
 import { Reveal } from "./Reveal";
 
 const POLL_MS = 15000;
+type Person = { token: string; me: Me };
 
-/** The part of the page that depends on who you are and whether the draw has happened. */
+/** The part of the page that depends on who is on this device and whether the draw has happened. */
 export function ParticipantApp({ sync = 0 }: { sync?: number }) {
   const [pub, setPub] = useState<PublicState | null>(null);
-  const [me, setMe] = useState<Me | null>(null);
+  const [people, setPeople] = useState<Person[]>([]);
+  const [active, setActive] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [fresh, setFresh] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const phase = useRef<string | null>(null);
-  const hasMatch = useRef(false);
+  const allMatched = useRef(false);
 
-  const load = useCallback(async (withMe: boolean) => {
+  const load = useCallback(async (withPeople: boolean) => {
     try {
       const state = await api.state();
       const changed = phase.current !== null && phase.current !== state.phase;
       phase.current = state.phase;
       setPub(state);
       setError(null);
-      const token = getToken();
-      // also retry while the draw is done but this device has not received its match yet
-      if (token && (withMe || changed || (state.phase === "drawn" && !hasMatch.current))) {
-        try {
-          const mine = await api.me(token);
-          hasMatch.current = !!mine.match;
-          setMe(mine);
-        } catch (err) {
-          if (err instanceof ApiError && err.code === "unauthorized") {
-            clearToken();
-            setMe(null);
-            if (state.phase === "signup") setNotice("Dein Eintrag wurde entfernt – trag dich gern nochmal ein.");
-          } else throw err;
-        }
-      } else if (!token) setMe(null);
+      const tokens = getTokens();
+      // also retry while the draw is done but someone on this device has not received their match yet
+      if (tokens.length && (withPeople || changed || (state.phase === "drawn" && !allMatched.current))) {
+        const results = await Promise.all(
+          tokens.map((token) =>
+            api.me(token).then(
+              (me): Person | "gone" => ({ token, me }),
+              (err) => {
+                if (err instanceof ApiError && err.code === "unauthorized") return "gone" as const;
+                throw err;
+              },
+            ),
+          ),
+        );
+        const here = results.filter((r): r is Person => r !== "gone");
+        tokens.filter((_, i) => results[i] === "gone").forEach((t) => clearToken(t));
+        if (!here.length && state.phase === "signup") setNotice("Dein Eintrag wurde entfernt – trag dich gern nochmal ein.");
+        allMatched.current = here.length > 0 && here.every((p) => p.me.match);
+        setPeople(here);
+        setActive(getToken());
+      } else if (!tokens.length) {
+        setPeople([]);
+        setActive(null);
+      }
     } catch (err) {
       setError(errorText(err instanceof ApiError ? err.code : "server"));
     }
   }, []);
 
   useEffect(() => {
-    // personal link: ?t=<token> signs this device in, then disappears from the address bar
+    // personal link: ?t=<token> adds that person to this device, then disappears from the address bar
     let linkToken: string | null = null;
     try {
       const url = new URL(window.location.href);
@@ -60,11 +72,14 @@ export function ParticipantApp({ sync = 0 }: { sync?: number }) {
     } catch {}
     (async () => {
       if (linkToken) {
-        // a link never replaces a login that still works, and a dead link changes nothing
-        const existing = getToken();
+        // a dead link changes nothing; a working one joins the people already on this device without replacing them
+        const before = getToken();
         const works = (t: string) => api.me(t).then(() => true, () => false);
-        const keep = !!existing && existing !== linkToken && (await works(existing));
-        if (!keep && (await works(linkToken))) setToken(linkToken);
+        if (await works(linkToken)) {
+          const keep = before && before !== linkToken && (await works(before)) ? before : null;
+          setToken(linkToken);
+          if (keep) setToken(keep);
+        }
       }
       await load(true);
     })();
@@ -99,8 +114,33 @@ export function ParticipantApp({ sync = 0 }: { sync?: number }) {
     );
   }
 
+  const current = people.find((p) => p.token === active) ?? people[0];
+  const choose = (token: string) => {
+    setToken(token);
+    setActive(token);
+    setAdding(false);
+    setFresh(false);
+  };
+  const switcher = people.length > 1 && (
+    <div className="people" role="group" aria-label="Wer ist gerade dran?">
+      <span className="people__label">Auf diesem Gerät:</span>
+      {people.map((p) => (
+        <button key={p.token} type="button" className="people__chip" aria-pressed={!adding && p.token === current?.token} onClick={() => choose(p.token)}>
+          {p.me.name}
+        </button>
+      ))}
+    </div>
+  );
+
   if (pub.phase === "drawn") {
-    if (me?.match) return <Reveal me={me} />;
+    if (current?.me.match) {
+      return (
+        <>
+          {switcher}
+          <Reveal key={current.me.id} me={current.me} />
+        </>
+      );
+    }
     return (
       <Card pose="nap" mood="sleep" className="card--in card--center">
         <h2>Die Auslosung ist schon gelaufen</h2>
@@ -109,20 +149,48 @@ export function ParticipantApp({ sync = 0 }: { sync?: number }) {
     );
   }
 
-  if (me && !leaving) return <Confirmation me={{ ...me, budget: pub.budget }} fresh={fresh} onChange={setMe} />;
+  if (current && !adding && !leaving) {
+    return (
+      <>
+        {switcher}
+        <Confirmation
+          key={current.me.id}
+          me={{ ...current.me, budget: pub.budget }}
+          token={current.token}
+          fresh={fresh}
+          onChange={(me) => setPeople((list) => list.map((p) => (p.token === current.token ? { ...p, me } : p)))}
+          onAdd={() => {
+            setFresh(false);
+            setAdding(true);
+          }}
+        />
+      </>
+    );
+  }
 
   return (
-    <JoinForm
-      budget={pub.budget}
-      notice={notice}
-      leaving={leaving}
-      onJoined={(joined) => {
-        setNotice(null);
-        setFresh(true);
-        setLeaving(true);
-        setMe(joined);
-        window.setTimeout(() => setLeaving(false), 520);
-      }}
-    />
+    <>
+      {switcher}
+      <JoinForm
+        key={people.length}
+        budget={pub.budget}
+        notice={notice}
+        leaving={leaving}
+        another={people.length > 0}
+        onCancel={() => setAdding(false)}
+        onJoined={(me, token) => {
+          setToken(token);
+          setNotice(null);
+          setFresh(true);
+          setLeaving(true);
+          setPeople((list) => [...list, { token, me }]);
+          setActive(token);
+          window.setTimeout(() => {
+            setLeaving(false);
+            setAdding(false);
+          }, 520);
+        }}
+      />
+    </>
   );
 }

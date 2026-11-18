@@ -58,7 +58,7 @@ export function Confirmation({ me, token, fresh, onChange, onAdd }: { me: Me; to
   }
 
   return (
-    <Card pose="header" mood={fresh ? "wake" : "awake"} budget={me.budget} className="card--in" sparkle={fresh}>
+    <Card pose="form" mood={fresh ? "wake" : "awake"} budget={me.budget} className="card--in" sparkle={fresh}>
       <h2>Du bist dabei, {me.name}!</h2>
       <p className="card__lead">Dein Wunschzettel steckt in der Socke. Sobald alle da sind, lost Peng aus – schau dann einfach wieder hier vorbei.</p>
       {editing ? (

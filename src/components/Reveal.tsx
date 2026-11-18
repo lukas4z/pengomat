@@ -137,7 +137,7 @@ export function Reveal({ me, owner, autoOpen = true }: { me: Me; owner?: string;
   return (
     <>
       {seen ? (
-        <Card pose="reveal" className="card--in card--center">
+        <Card pose="header" className="card--in card--center">
           <Match me={me} owner={owner} />
           <button type="button" className="link" onClick={restart}>Nochmal auspacken</button>
         </Card>
@@ -202,7 +202,7 @@ export function Reveal({ me, owner, autoOpen = true }: { me: Me; owner?: string;
           ) : (
             <div className="reveal__result">
               <Sparkles />
-              <Peng pose="reveal" className="reveal__peng" />
+              <Peng pose="done" className="reveal__peng" />
               <div className="reveal__card">
                 <Match me={me} owner={owner} />
                 <button type="button" className="btn btn--wide" onClick={close}>Alles klar!</button>

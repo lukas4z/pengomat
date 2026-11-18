@@ -55,16 +55,80 @@ function Floor() {
   );
 }
 
+const STARS = Array.from({ length: 16 }, (_, i) => ({
+  left: (i * 37 + 11) % 100,
+  top: (i * 53 + 7) % 100,
+  size: 10 + ((i * 7) % 12),
+  delay: (i * 1.3) % 7,
+  dur: 4 + (i % 4),
+}));
+
+/** Little stars on the wall that sparkle every few seconds. */
+function Twinkles() {
+  return (
+    <div className="twinkles" aria-hidden>
+      {STARS.map((s, i) => (
+        <i key={i} style={{ left: `${s.left}%`, top: `${s.top}%`, width: s.size, height: s.size, animationDelay: `${s.delay}s`, animationDuration: `${s.dur}s` }} />
+      ))}
+    </div>
+  );
+}
+
+const TREE_BAUBLES = [
+  { x: 30, y: 44, c: "#e2574c", d: 0 }, { x: 62, y: 38, c: "#f4c04e", d: 0.8 }, { x: 46, y: 60, c: "#f4c04e", d: 1.5 },
+  { x: 22, y: 70, c: "#f4c04e", d: 0.4 }, { x: 72, y: 66, c: "#e2574c", d: 1.1 }, { x: 54, y: 80, c: "#e2574c", d: 1.9 },
+];
+
+/** The rendered tree with a twinkling star and softly swinging baubles on top. */
+function FilmTree() {
+  return (
+    <div className="deco-tree">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/film/tree.webp" alt="" draggable={false} />
+      <span className="deco-tree__star" />
+      {TREE_BAUBLES.map((b, i) => (
+        <span key={i} className="deco-tree__bauble" style={{ left: `${b.x}%`, top: `${b.y}%`, background: `radial-gradient(circle at 35% 30%, #fff8 0 12%, ${b.c} 40%, #0005 130%)`, animationDelay: `-${b.d}s` }} />
+      ))}
+    </div>
+  );
+}
+
+function FilmFloor() {
+  const img = (name: string, cls = "") => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img className={`deco deco--${name} ${cls}`} src={`/film/${name}.webp`} alt="" draggable={false} />
+  );
+  return (
+    <div className="floor floor--film" aria-hidden>
+      <div className="floor__row">
+        <FilmTree />
+        {img("sack")}
+        {img("gingerbread")}
+        <span className="deco-candles">
+          {img("candles")}
+          <i className="deco-candles__glow" />
+        </span>
+        {img("globe")}
+        {img("horse", "deco--rock")}
+      </div>
+    </div>
+  );
+}
+
 export function Room({ children }: { children: ReactNode }) {
+  const { theme } = useTheme();
+  const film = theme === "film";
   return (
     <div className="room">
       <Defs />
+      {film && <div className="room__backdrop" aria-hidden />}
       <div className="room__light" aria-hidden />
+      <Twinkles />
       <Garland />
-      <Wreath />
-      <Frame />
+      {film ? null : <Wreath />}
+      {film ? null : <Frame />}
       <main className="room__content">{children}</main>
-      <Floor />
+      {film ? <FilmFloor /> : <Floor />}
     </div>
   );
 }

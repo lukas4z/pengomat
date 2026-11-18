@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
 import { useTheme } from "./ThemeProvider";
 import { fill, outline, INK } from "@/lib/skin";
 
@@ -9,23 +8,23 @@ export type PengPose = "header" | "form" | "done" | "reveal" | "gift" | "look" |
 const FALLBACK: Partial<Record<PengPose, PengPose>> = { sleep: "form", nap: "form", look: "header", gift: "header", beg: "header", held: "header", reveal: "done", done: "header" };
 
 /** Peng image for the current look; falls back to the header pose, then to a drawn stand-in. */
+const FILES: Record<string, string[]> = JSON.parse(process.env.NEXT_PUBLIC_PENG_FILES || "{}");
+
+function pick(theme: string, pose: PengPose): string | null {
+  const have = FILES[theme] ?? [];
+  for (const p of [pose, FALLBACK[pose], "header"]) {
+    if (!p) continue;
+    for (const ext of ["webp", "png"]) if (have.includes(`peng-${p}.${ext}`)) return `/peng/${theme}/peng-${p}.${ext}`;
+  }
+  return null;
+}
+
 export function Peng({ pose, className = "" }: { pose: PengPose; className?: string }) {
   const { theme } = useTheme();
-  const base = `/peng/${theme}/peng-`;
-  const poses = [pose, FALLBACK[pose], "header"].filter((p, i, a): p is PengPose => !!p && a.indexOf(p) === i);
-  const candidates = poses.flatMap((p) => [`${base}${p}.webp`, `${base}${p}.png`]);
-  const [step, setStep] = useState(0);
-  const ref = useRef<HTMLImageElement>(null);
-  useEffect(() => setStep(0), [theme, pose]);
-  useEffect(() => {
-    const img = ref.current;
-    if (img && img.complete && img.naturalWidth === 0) setStep((s) => s + 1);
-  }, [step, theme, pose]);
-  if (step >= candidates.length) return <PengStandIn pose={pose} className={className} />;
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img ref={ref} key={candidates[step]} src={candidates[step]} alt="Kater Peng als Weihnachtswichtel" className={`peng peng--${pose} ${className}`} onError={() => setStep((s) => s + 1)} draggable={false} />
-  );
+  const src = pick(theme, pose);
+  if (!src) return <PengStandIn pose={pose} className={className} />;
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img key={src} src={src} alt="Kater Peng als Weihnachtswichtel" className={`peng peng--${pose} ${className}`} draggable={false} />;
 }
 
 function PengStandIn({ pose, className }: { pose: PengPose; className: string }) {

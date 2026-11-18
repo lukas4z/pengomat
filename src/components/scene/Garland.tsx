@@ -33,6 +33,8 @@ function Swag({ i }: { i: number }) {
 }
 
 export function Garland() {
+  const { theme } = useTheme();
+  if (theme === "film") return <div className="garland garland--film" aria-hidden />;
   return (
     <div className="garland" aria-hidden>
       {Array.from({ length: 9 }, (_, i) => (

@@ -17,6 +17,22 @@ function Candle({ x, h, delay }: { x: number; h: number; delay: number }) {
 export function Fireplace({ children }: { children?: ReactNode }) {
   const { theme } = useTheme();
   const o = outline(theme);
+  if (theme === "film") {
+    return (
+      <section className="hearth hearth--film" aria-label="Kamin">
+        {/* eslint-disable @next/next/no-img-element */}
+        <img className="hearth__top" src="/film/hearth-top.webp" alt="" draggable={false} />
+        <div className="hearth__band">
+          <div className="hearth__socks">{children}</div>
+        </div>
+        <div className="hearth__bottom">
+          <img src="/film/hearth-bottom.webp" alt="" draggable={false} />
+          <span className="hearth__glow" />
+        </div>
+        {/* eslint-enable @next/next/no-img-element */}
+      </section>
+    );
+  }
   return (
     <section className="hearth" aria-label="Kamin">
       <svg className="hearth__deco" viewBox="0 0 320 62" aria-hidden>
@@ -31,7 +47,6 @@ export function Fireplace({ children }: { children?: ReactNode }) {
         <div className="hearth__socks">{children}</div>
         <svg className="hearth__fire" viewBox="0 0 300 180" aria-hidden>
           <path d="M24 180 V84 Q24 14 150 14 Q276 14 276 84 V180 Z" fill={fill(theme, "dark")} {...outline(theme, 5)} />
-          {theme === "film" && <ellipse cx="150" cy="150" rx="120" ry="70" fill="url(#g-glow)" opacity="0.75" />}
           <g className="flames">
             <path className="flame" style={{ transformOrigin: "150px 160px" }} d="M150 44 q44 46 26 94 q-10 26 -26 26 q-18 0 -28 -26 q-16 -44 28 -94z" fill="#f2702c" {...outline(theme, 3.5)} />
             <path className="flame" style={{ transformOrigin: "108px 160px", animationDelay: "-0.5s" }} d="M108 92 q24 28 14 54 q-5 14 -14 14 q-11 0 -16 -14 q-8 -26 16 -54z" fill="#f2702c" {...outline(theme, 3.5)} />

@@ -13,6 +13,19 @@ export function Window() {
   const { theme } = useTheme();
   const o = outline(theme);
   const film = theme === "film";
+  if (film) {
+    return (
+      <div className="window window--film" aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/film/window.webp" alt="" draggable={false} />
+        <div className="window__snow">
+          {FLAKES.map((f, i) => (
+            <i key={i} style={{ left: `${((f.x - 34) / 232) * 100}%`, width: f.r * 2, height: f.r * 2, animationDuration: `${f.dur}s`, animationDelay: `${f.delay}s` }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <svg className="window" viewBox="0 0 300 250" aria-hidden>
       <defs>

@@ -2,7 +2,7 @@
 const { chromium } = require("playwright");
 const base = process.argv[2] || "http://localhost:3111";
 const stil = process.argv[3] || "film";
-const KEY = "test-key";
+const KEY = process.env.HOST_KEY || "test-key";
 const H = { "x-host-key": KEY, "content-type": "application/json" };
 const log = (ok, msg) => console.log(`${ok ? "PASS" : "FAIL"}  ${msg}`);
 const join = (name, wish) => fetch(`${base}/api/join`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, wishes: [wish] }) });

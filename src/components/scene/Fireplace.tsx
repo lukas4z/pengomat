@@ -28,6 +28,14 @@ export function Fireplace({ children }: { children?: ReactNode }) {
         <div className="hearth__bottom">
           <img src="/film/hearth-bottom.webp" alt="" draggable={false} />
           <span className="hearth__glow" />
+          <span className="hearth__flames" aria-hidden>
+            <i /><i /><i />
+          </span>
+          <span className="hearth__embers" aria-hidden>
+            {[18, 34, 50, 63, 78, 44].map((x, i) => (
+              <i key={i} style={{ left: `${x}%`, animationDelay: `${-i * 0.7}s`, animationDuration: `${2.6 + (i % 3) * 0.7}s` }} />
+            ))}
+          </span>
         </div>
         {/* eslint-enable @next/next/no-img-element */}
       </section>

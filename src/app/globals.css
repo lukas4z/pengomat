@@ -502,7 +502,7 @@ html[data-theme="film"] .countdown-note, html[data-theme="film"] .section-title,
 .hearth--film .hearth__socks { position: relative; z-index: 3; margin-bottom: -34px; }
 .hearth__bottom { position: relative; }
 .hearth__bottom img { display: block; width: 100%; }
-.hearth__glow { position: absolute; left: 22%; right: 22%; top: 30%; bottom: 14%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 190, 90, 0.5), transparent 68%); mix-blend-mode: screen; animation: candle 1.3s ease-in-out infinite alternate; pointer-events: none; }
+.hearth__glow { position: absolute; left: 18%; right: 18%; top: 0; bottom: 18%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 190, 90, 0.5), transparent 68%); mix-blend-mode: screen; animation: candle 1.3s ease-in-out infinite alternate; pointer-events: none; }
 .sock__img { display: block; width: 62px; margin: 0 auto; filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.4)); transition: transform 0.2s; }
 .sock:hover .sock__img { transform: translateY(4px) rotate(-4deg); }
 html[data-theme="film"] .sock--c1 .sock__img { filter: hue-rotate(105deg) saturate(0.75) drop-shadow(0 5px 5px rgba(0, 0, 0, 0.4)); }
@@ -546,3 +546,13 @@ html[data-theme="film"] .dialog__body { background: linear-gradient(175deg, #fff
 html[data-theme="film"] .sound-toggle { border: 3px solid #8a5636; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); background: linear-gradient(#fff6e6, #f3dcb6); }
 .sound-toggle svg { width: 24px; height: 24px; }
 .sound-toggle--off { opacity: 0.85; }
+
+/* living fire on top of the rendered one */
+.hearth__flames, .hearth__embers { position: absolute; left: 36%; right: 34%; top: 8%; bottom: 30%; pointer-events: none; }
+.hearth__flames i { position: absolute; bottom: 0; border-radius: 50% 50% 50% 50% / 68% 68% 32% 32%; transform-origin: 50% 100%; mix-blend-mode: screen; filter: blur(3px); animation: flame 1.15s ease-in-out infinite alternate; }
+.hearth__flames i:nth-child(1) { left: 22%; width: 56%; height: 100%; background: radial-gradient(ellipse at 50% 80%, #fff3b0 0 18%, #ffb238 45%, rgba(255, 110, 30, 0.55) 70%, transparent 78%); }
+.hearth__flames i:nth-child(2) { left: 0; width: 44%; height: 66%; background: radial-gradient(ellipse at 50% 80%, #ffd76a 0 20%, #ff8a2a 55%, transparent 76%); animation-duration: 0.9s; animation-delay: -0.4s; }
+.hearth__flames i:nth-child(3) { right: 0; width: 44%; height: 72%; background: radial-gradient(ellipse at 50% 80%, #ffd76a 0 20%, #ff8a2a 55%, transparent 76%); animation-duration: 1.35s; animation-delay: -0.8s; }
+.hearth__embers i { position: absolute; bottom: 20%; width: 5px; height: 5px; border-radius: 50%; background: #ffd27a; box-shadow: 0 0 6px 2px rgba(255, 170, 60, 0.8); opacity: 0; animation: ember 3s ease-out infinite; }
+@keyframes flame { 0% { transform: scale(1, 0.86) skewX(-5deg); opacity: 0.75; } 50% { transform: scale(0.92, 1.06) skewX(3deg); opacity: 0.95; } 100% { transform: scale(1.05, 0.94) skewX(6deg); opacity: 0.8; } }
+@keyframes ember { 0% { opacity: 0; transform: translate(0, 0) scale(1); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(14px, -150px) scale(0.3); } }

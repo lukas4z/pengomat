@@ -3,12 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import { useTheme } from "./ThemeProvider";
 import { fill, outline, INK } from "@/lib/skin";
 
-export type PengPose = "header" | "form" | "done" | "reveal";
+export type PengPose = "header" | "form" | "done" | "reveal" | "gift" | "look" | "beg" | "sleep" | "nap" | "held";
+
+/** Which pose stands in when a look has no picture for the wanted one. */
+const FALLBACK: Partial<Record<PengPose, PengPose>> = { sleep: "form", nap: "form", look: "header", gift: "header", beg: "header", held: "header", reveal: "done", done: "header" };
 
 /** Peng image for the current look; falls back to the header pose, then to a drawn stand-in. */
 export function Peng({ pose, className = "" }: { pose: PengPose; className?: string }) {
   const { theme } = useTheme();
-  const candidates = [`/peng/${theme}/peng-${pose}.png`, `/peng/${theme}/peng-header.png`];
+  const base = `/peng/${theme}/peng-`;
+  const poses = [pose, FALLBACK[pose], "header"].filter((p, i, a): p is PengPose => !!p && a.indexOf(p) === i);
+  const candidates = poses.flatMap((p) => [`${base}${p}.webp`, `${base}${p}.png`]);
   const [step, setStep] = useState(0);
   const ref = useRef<HTMLImageElement>(null);
   useEffect(() => setStep(0), [theme, pose]);

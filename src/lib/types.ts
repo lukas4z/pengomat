@@ -44,4 +44,4 @@ export class ServiceError extends Error {
   }
 }
 export const EVENT_DATE = "2026-12-26T00:00:00+01:00";
-export const LIMITS = { nameMin: 2, nameMax: 30, wishMax: 200, wishesMax: 3, budgetMax: 40, participantsMax: 50, drawMin: 3 };
+export const LIMITS = { nameMin: 2, nameMax: 30, wishMax: 2000, wishesMax: 10, budgetMax: 100, participantsMax: 50, drawMin: 3 };

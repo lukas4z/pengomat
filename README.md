@@ -29,7 +29,7 @@ Die Anbindung an Upstash ist gegen keine echte Datenbank getestet worden – der
 
 ## Wie es abläuft
 
-- Jede Person trägt Name und 1–3 Wünsche ein. Wünsche sieht nur, wer die Person zieht.
+- Jede Person trägt Name und einen oder mehrere Wünsche ein (bis zu 10, je bis 2000 Zeichen). Wünsche sieht nur, wer die Person zieht.
 - Das Gerät merkt sich, wer man ist. Zusätzlich gibt es einen persönlichen Link für andere Geräte.
 - Die Gastgeberin sieht am Kamin eine Socke pro Person (Name, Zeitpunkt, Anzahl Wünsche), legt das Budget fest und lost aus. Paarungen sieht auch sie nicht.
 - Link verloren? Socke antippen → „Neuen persönlichen Link erzeugen" und weiterschicken.

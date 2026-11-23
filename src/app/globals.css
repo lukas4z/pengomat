@@ -646,3 +646,6 @@ html[data-theme="film"] .people__chip { border: 3px solid #8a5636; box-shadow: 0
 .card__peng--awake .peng { animation: breathe 4.6s ease-in-out infinite; }
 .card__peng .peng--header, .card__peng .peng--look { width: 74%; margin: 0 auto; }
 .reveal__peng { margin-bottom: -22px; }
+/* wish fields grow with the text instead of scrolling inside a small box */
+.field textarea { field-sizing: content; max-height: 50vh; }
+.wishes li { white-space: pre-wrap; }

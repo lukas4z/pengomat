@@ -19,8 +19,12 @@ describe("parseWishes", () => {
   test("trims and drops empty entries", () => expect(parseWishes(["", " Socken ", ""])).toEqual(["Socken"]));
   test("rejects an empty list", () => invalid(() => parseWishes([])));
   test("rejects a list of only blanks", () => invalid(() => parseWishes(["  ", ""])));
-  test("rejects four wishes", () => invalid(() => parseWishes(["a", "b", "c", "d"])));
-  test("rejects a 201-character wish", () => invalid(() => parseWishes(["x".repeat(201)])));
+  test("accepts a long wish of 2000 characters and ten wishes", () => {
+    expect(parseWishes(["x".repeat(2000)])[0]).toHaveLength(2000);
+    expect(parseWishes(Array.from({ length: 10 }, (_, i) => `Wunsch ${i}`))).toHaveLength(10);
+  });
+  test("rejects eleven wishes", () => invalid(() => parseWishes(Array.from({ length: 11 }, (_, i) => `Wunsch ${i}`))));
+  test("rejects a wish over 2000 characters", () => invalid(() => parseWishes(["x".repeat(2001)])));
   test("rejects non-arrays and non-string entries", () => {
     invalid(() => parseWishes("Socken"));
     invalid(() => parseWishes([1]));
@@ -34,7 +38,8 @@ describe("parseBudget", () => {
     expect(parseBudget("")).toBe("");
   });
   test("rejects more than 40 characters and non-strings", () => {
-    invalid(() => parseBudget("x".repeat(41)));
+    expect(parseBudget("x".repeat(100))).toHaveLength(100);
+    invalid(() => parseBudget("x".repeat(101)));
     invalid(() => parseBudget(15));
   });
 });

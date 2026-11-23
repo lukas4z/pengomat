@@ -1,7 +1,7 @@
 "use client";
 import { LIMITS } from "@/lib/types";
 
-/** One to three wish inputs; the first is required. */
+/** One or more wish inputs (up to LIMITS.wishesMax); the first is required. */
 export function WishFields({ wishes, onChange, error, idPrefix = "wish" }: { wishes: string[]; onChange: (w: string[]) => void; error?: string; idPrefix?: string }) {
   const set = (i: number, v: string) => onChange(wishes.map((w, k) => (k === i ? v : w)));
   return (
